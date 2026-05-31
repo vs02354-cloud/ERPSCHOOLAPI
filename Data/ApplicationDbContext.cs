@@ -31,6 +31,7 @@ namespace SchoolERP.Api.Data
         public DbSet<Vehicle> Vehicles { get; set; }
         public DbSet<TransportRoute> TransportRoutes { get; set; }
         public DbSet<Notice> Notices { get; set; }
+        public DbSet<AdmissionInquiry> AdmissionInquiries { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
