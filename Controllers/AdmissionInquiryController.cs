@@ -71,7 +71,7 @@ namespace SchoolERP.Api.Controllers
 
         // GET: api/AdmissionInquiry
         [HttpGet]
-        [Authorize(Roles = "Admin,Principal,Receptionist,Super Admin,School Admin")]
+        [Authorize(Roles = "Admin,ADMIN,Principal,PRINCIPAL,Operator,OPERATOR,Receptionist,RECEPTIONIST,Super Admin,SUPER ADMIN,School Admin,SCHOOL ADMIN")]
         public async Task<ActionResult<IEnumerable<AdmissionInquiry>>> GetInquiries([FromQuery] string? status, [FromQuery] string? search)
         {
             var query = _context.AdmissionInquiries.AsQueryable();
@@ -95,7 +95,7 @@ namespace SchoolERP.Api.Controllers
 
         // GET: api/AdmissionInquiry/5
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin,Principal,Receptionist,Super Admin,School Admin")]
+        [Authorize(Roles = "Admin,ADMIN,Principal,PRINCIPAL,Operator,OPERATOR,Receptionist,RECEPTIONIST,Super Admin,SUPER ADMIN,School Admin,SCHOOL ADMIN")]
         public async Task<ActionResult<AdmissionInquiry>> GetInquiry(int id)
         {
             var inquiry = await _context.AdmissionInquiries.FindAsync(id);
@@ -110,7 +110,7 @@ namespace SchoolERP.Api.Controllers
 
         // PUT: api/AdmissionInquiry/5/status
         [HttpPut("{id}/status")]
-        [Authorize(Roles = "Admin,Principal,Receptionist,Super Admin,School Admin")]
+        [Authorize(Roles = "Admin,ADMIN,Principal,PRINCIPAL,Operator,OPERATOR,Receptionist,RECEPTIONIST,Super Admin,SUPER ADMIN,School Admin,SCHOOL ADMIN")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateInquiryStatusDto dto)
         {
             var inquiry = await _context.AdmissionInquiries.FindAsync(id);
@@ -143,7 +143,7 @@ namespace SchoolERP.Api.Controllers
 
         // GET: api/AdmissionInquiry/summary
         [HttpGet("summary")]
-        [Authorize(Roles = "Admin,Principal,Receptionist,Super Admin,School Admin")]
+        [Authorize(Roles = "Admin,ADMIN,Principal,PRINCIPAL,Operator,OPERATOR,Receptionist,RECEPTIONIST,Super Admin,SUPER ADMIN,School Admin,SCHOOL ADMIN")]
         public async Task<IActionResult> GetSummary()
         {
             var summary = await _context.AdmissionInquiries
