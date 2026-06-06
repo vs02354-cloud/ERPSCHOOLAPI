@@ -33,6 +33,10 @@ namespace SchoolERP.Api.Data
         public DbSet<Notice> Notices { get; set; }
         public DbSet<AdmissionInquiry> AdmissionInquiries { get; set; }
 
+        // Phase 5: Assignments
+        public DbSet<AssignmentMaster> AssignmentMasters { get; set; }
+        public DbSet<AssignmentSubmission> AssignmentSubmissions { get; set; }
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
