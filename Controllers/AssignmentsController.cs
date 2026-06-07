@@ -207,5 +207,63 @@ namespace SchoolERP.Api.Controllers
 
             return Ok(result);
         }
+
+        // GET: api/Assignments/Parent
+        [HttpGet("Parent")]
+        [Authorize(Roles = "Parent,PARENT,parent")]
+        public async Task<IActionResult> GetParentAssignments()
+        {
+            var userName = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userName)) return Unauthorized("User not identified.");
+
+            var children = await _context.Students
+                .Where(s => s.ParentContactNumber == userName && s.IsActive)
+                .ToListAsync();
+
+            if (!children.Any()) return Ok(new List<object>());
+
+            var result = new List<object>();
+
+            foreach (var student in children)
+            {
+                var assignments = await _context.AssignmentMasters
+                    .Where(a => a.ClassName == student.CurrentClass && a.Section == student.Section)
+                    .Include(a => a.Submissions.Where(s => s.StudentId == student.Id))
+                    .OrderByDescending(a => a.CreatedDate)
+                    .ToListAsync();
+
+                foreach (var a in assignments)
+                {
+                    var mySubmission = a.Submissions?.FirstOrDefault();
+                    string status = "Pending";
+                    if (mySubmission != null)
+                    {
+                        status = mySubmission.Status; // "Submitted", "Late Submitted", "Evaluated", "Rejected"
+                    }
+                    else if (a.DueDate < DateTime.UtcNow)
+                    {
+                        status = "Overdue";
+                    }
+
+                    result.Add(new
+                    {
+                        AssignmentId = a.AssignmentId,
+                        Title = a.Title,
+                        Subject = a.Subject,
+                        DueDate = a.DueDate,
+                        MaxMarks = a.MaxMarks,
+                        ClassName = a.ClassName,
+                        Section = a.Section,
+                        AssignedDate = a.CreatedDate,
+                        ChildName = $"{student.FirstName} {student.LastName}",
+                        Status = status,
+                        MySubmission = mySubmission
+                    });
+                }
+            }
+
+            // Sort by AssignedDate descending
+            return Ok(result.OrderByDescending(r => r.GetType().GetProperty("AssignedDate")?.GetValue(r, null)));
+        }
     }
 }
