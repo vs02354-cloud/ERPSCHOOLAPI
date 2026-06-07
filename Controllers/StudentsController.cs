@@ -40,15 +40,36 @@ namespace SchoolERP.Api.Controllers
             return student;
         }
 
-        // GET: api/Students/MyChildren
         [HttpGet("MyChildren")]
         [Authorize(Roles = "Parent")]
         public async Task<ActionResult<IEnumerable<Student>>> GetMyChildren()
         {
             var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
-            if (userId == null) return Unauthorized();
+            var userName = User.Identity?.Name; // For parents, UserName is their MobileNumber
 
-            var children = await _context.Students.Where(s => s.ParentUserId == userId && s.IsActive).ToListAsync();
+            if (userId == null || userName == null) return Unauthorized();
+
+            // Fetch children by either explicit ParentUserId or matching ParentContactNumber
+            var children = await _context.Students
+                .Where(s => (s.ParentUserId == userId || s.ParentContactNumber == userName) && s.IsActive)
+                .ToListAsync();
+
+            // Self-healing: if any matched by mobile number but haven't been permanently linked, link them now
+            bool needsSave = false;
+            foreach (var child in children)
+            {
+                if (string.IsNullOrEmpty(child.ParentUserId))
+                {
+                    child.ParentUserId = userId;
+                    needsSave = true;
+                }
+            }
+
+            if (needsSave)
+            {
+                await _context.SaveChangesAsync();
+            }
+
             return Ok(children);
         }
 
