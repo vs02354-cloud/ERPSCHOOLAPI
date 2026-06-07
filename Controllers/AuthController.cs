@@ -65,51 +65,57 @@ namespace SchoolERP.Api.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { Status = "Error", Message = errors });
             }
 
-            if (!await _roleManager.RoleExistsAsync(model.UserType))
-                await _roleManager.CreateAsync(new IdentityRole(model.UserType));
-
-            await _userManager.AddToRoleAsync(user, model.UserType);
-
-            // Link Identity to ERP Profiles
-            if (model.UserType == "Student")
+            try
             {
-                var count = _context.Students.Count();
-                var student = new Student
+                if (!await _roleManager.RoleExistsAsync(model.UserType))
+                    await _roleManager.CreateAsync(new IdentityRole(model.UserType));
+
+                await _userManager.AddToRoleAsync(user, model.UserType);
+
+                // Link Identity to ERP Profiles
+                if (model.UserType == "Student")
                 {
-                    ApplicationUserId = user.Id,
-                    FirstName = model.FirstName,
-                    LastName = model.LastName,
-                    AdmissionNumber = $"ADM{DateTime.Now.Year}{(count + 1):D4}",
-                    AdmissionDate = DateTime.UtcNow
-                };
-                _context.Students.Add(student);
-            }
-            else if (model.UserType == "Parent")
-            {
-                var studentsToLink = _context.Students.Where(s => s.ParentContactNumber == model.MobileNumber).ToList();
-                foreach (var s in studentsToLink)
-                {
-                    s.ParentUserId = user.Id;
+                    var count = _context.Students.Count();
+                    var student = new Student
+                    {
+                        ApplicationUserId = user.Id,
+                        FirstName = model.FirstName,
+                        LastName = model.LastName,
+                        AdmissionNumber = $"ADM{DateTime.Now.Year}{(count + 1):D4}",
+                        AdmissionDate = DateTime.UtcNow
+                    };
+                    _context.Students.Add(student);
                 }
-            }
-            else // Teachers, Admins, Principals, etc.
-            {
-                var count = _context.Employees.Count();
-                var employee = new Employee
+                else if (model.UserType == "Parent")
                 {
-                    EmployeeCode = $"EMP{DateTime.Now.Year}{(count + 1):D4}",
-                    FirstName = model.FirstName,
-                    LastName = model.LastName,
-                    Username = model.Email,
-                    Designation = model.UserType,
-                    MobileNumber = model.MobileNumber
-                };
-                _context.Employees.Add(employee);
+                    var studentsToLink = _context.Students.Where(s => s.ParentContactNumber == model.MobileNumber).ToList();
+                    foreach (var s in studentsToLink)
+                    {
+                        s.ParentUserId = user.Id;
+                    }
+                }
+                else // Teachers, Admins, Principals, etc.
+                {
+                    var count = _context.Employees.Count();
+                    var employee = new Employee
+                    {
+                        EmployeeCode = $"EMP{DateTime.Now.Year}{(count + 1):D4}",
+                        FirstName = model.FirstName,
+                        LastName = model.LastName,
+                        Username = model.Email,
+                        Designation = model.UserType,
+                        MobileNumber = model.MobileNumber
+                    };
+                    _context.Employees.Add(employee);
+                }
+
+                await _context.SaveChangesAsync();
+                return Ok(new { Status = "Success", Message = "User created successfully!" });
             }
-
-            await _context.SaveChangesAsync();
-
-            return Ok(new { Status = "Success", Message = "User created successfully!" });
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Status = "Error", Message = "Post-creation error: " + ex.Message + " Inner: " + ex.InnerException?.Message });
+            }
         }
 
         [HttpPost("login")]
