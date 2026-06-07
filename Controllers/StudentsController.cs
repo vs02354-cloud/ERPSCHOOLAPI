@@ -49,26 +49,10 @@ namespace SchoolERP.Api.Controllers
 
             if (userId == null || userName == null) return Unauthorized();
 
-            // Fetch children by either explicit ParentUserId or matching ParentContactNumber
+            // Fetch children solely by matching ParentContactNumber
             var children = await _context.Students
-                .Where(s => (s.ParentUserId == userId || s.ParentContactNumber == userName) && s.IsActive)
+                .Where(s => s.ParentContactNumber == userName && s.IsActive)
                 .ToListAsync();
-
-            // Self-healing: if any matched by mobile number but haven't been permanently linked, link them now
-            bool needsSave = false;
-            foreach (var child in children)
-            {
-                if (string.IsNullOrEmpty(child.ParentUserId))
-                {
-                    child.ParentUserId = userId;
-                    needsSave = true;
-                }
-            }
-
-            if (needsSave)
-            {
-                await _context.SaveChangesAsync();
-            }
 
             return Ok(children);
         }
