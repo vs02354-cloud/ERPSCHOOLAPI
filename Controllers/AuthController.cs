@@ -30,15 +30,27 @@ namespace SchoolERP.Api.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
-            var userExists = await _userManager.FindByEmailAsync(model.Email);
+            var username = model.UserType == "Parent" ? model.MobileNumber : model.Email;
+            var email = model.UserType == "Parent" ? null : model.Email;
+
+            ApplicationUser? userExists = null;
+            if (!string.IsNullOrEmpty(email)) 
+            {
+                 userExists = await _userManager.FindByEmailAsync(email);
+            }
+            if (userExists == null && !string.IsNullOrEmpty(username))
+            {
+                 userExists = await _userManager.FindByNameAsync(username);
+            }
+
             if (userExists != null)
                 return StatusCode(StatusCodes.Status500InternalServerError, new { Status = "Error", Message = "User already exists!" });
 
             ApplicationUser user = new()
             {
-                Email = model.Email,
+                Email = email,
                 SecurityStamp = Guid.NewGuid().ToString(),
-                UserName = model.Email,
+                UserName = username,
                 FirstName = model.FirstName,
                 LastName = model.LastName,
                 UserType = model.UserType,
@@ -72,7 +84,15 @@ namespace SchoolERP.Api.Controllers
                 };
                 _context.Students.Add(student);
             }
-            else if (model.UserType != "Parent") // Teachers, Admins, Principals, etc.
+            else if (model.UserType == "Parent")
+            {
+                var studentsToLink = _context.Students.Where(s => s.ParentContactNumber == model.MobileNumber).ToList();
+                foreach (var s in studentsToLink)
+                {
+                    s.ParentUserId = user.Id;
+                }
+            }
+            else // Teachers, Admins, Principals, etc.
             {
                 var count = _context.Employees.Count();
                 var employee = new Employee
@@ -95,7 +115,7 @@ namespace SchoolERP.Api.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
+            var user = await _userManager.FindByEmailAsync(model.Email) ?? await _userManager.FindByNameAsync(model.Email);
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
                 if (!user.IsActive)

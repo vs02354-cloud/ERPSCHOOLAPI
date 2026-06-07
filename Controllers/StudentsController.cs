@@ -39,6 +39,18 @@ namespace SchoolERP.Api.Controllers
             return student;
         }
 
+        // GET: api/Students/MyChildren
+        [HttpGet("MyChildren")]
+        [Authorize(Roles = "Parent")]
+        public async Task<ActionResult<IEnumerable<Student>>> GetMyChildren()
+        {
+            var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            var children = await _context.Students.Where(s => s.ParentUserId == userId && s.IsActive).ToListAsync();
+            return Ok(children);
+        }
+
         // POST: api/Students/Admission
         [HttpPost("Admission")]
         [Authorize(Roles = "Admin,Principal,Receptionist,Super Admin,School Admin")] // Updated to match actual DB roles

@@ -24,6 +24,7 @@ namespace SchoolERP.Api.Models
         public string Category { get; set; } = string.Empty;
 
         // Parent Details
+        public string? ParentUserId { get; set; } // Link to AspNetUsers for the parent
         public string FatherName { get; set; } = string.Empty;
         public string MotherName { get; set; } = string.Empty;
         public string ParentContactNumber { get; set; } = string.Empty;
