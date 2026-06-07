@@ -321,6 +321,120 @@ namespace SchoolERP.Api.Controllers
             };
         }
 
+        // --- Parent Specific Endpoints ---
+
+        [HttpGet("Parent/DashboardStats")]
+        [Authorize(Roles = "Parent,PARENT,parent")]
+        public async Task<ActionResult<object>> GetParentDashboardStats()
+        {
+            var userName = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userName)) return Unauthorized();
+
+            var childrenIds = await _context.Students
+                .Where(s => s.ParentContactNumber == userName && s.IsActive)
+                .Select(s => s.Id)
+                .ToListAsync();
+
+            if (!childrenIds.Any()) 
+            {
+                return new { TotalCollection = 0, TodayCollection = 0, PendingFees = 0, TotalStudentsPaid = 0 };
+            }
+
+            var today = DateTime.UtcNow.Date;
+            
+            var totalCollection = await _context.FeePayments
+                .Where(p => childrenIds.Contains(p.StudentId))
+                .SumAsync(p => p.AmountPaid);
+                
+            var todayCollection = await _context.FeePayments
+                .Where(p => childrenIds.Contains(p.StudentId) && p.PaymentDate.Date == today)
+                .SumAsync(p => p.AmountPaid);
+            
+            var totalStudentsPaid = await _context.FeePayments
+                .Where(p => childrenIds.Contains(p.StudentId))
+                .Select(p => p.StudentId)
+                .Distinct()
+                .CountAsync();
+
+            var students = await _context.Students.Where(s => childrenIds.Contains(s.Id)).ToListAsync();
+            var feeStructures = await _context.FeeStructures.ToListAsync();
+            var payments = await _context.FeePayments.Where(p => childrenIds.Contains(p.StudentId)).ToListAsync();
+
+            decimal totalPendingFees = 0;
+            foreach(var s in students)
+            {
+                var fStruct = feeStructures.Where(f => f.ClassName == s.CurrentClass).OrderByDescending(f => f.AcademicYear).FirstOrDefault();
+                if (fStruct != null)
+                {
+                    var paid = payments.Where(p => p.StudentId == s.Id).Sum(p => p.AmountPaid);
+                    totalPendingFees += (fStruct.TotalFee - paid);
+                }
+            }
+
+            return new { TotalCollection = totalCollection, TodayCollection = todayCollection, PendingFees = totalPendingFees, TotalStudentsPaid = totalStudentsPaid };
+        }
+
+        [HttpGet("Parent/PendingReport")]
+        [Authorize(Roles = "Parent,PARENT,parent")]
+        public async Task<ActionResult<IEnumerable<object>>> GetParentPendingReport()
+        {
+            var userName = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userName)) return Unauthorized();
+
+            var students = await _context.Students
+                .Where(s => s.ParentContactNumber == userName && s.IsActive)
+                .ToListAsync();
+
+            var feeStructures = await _context.FeeStructures.ToListAsync();
+            var childrenIds = students.Select(s => s.Id).ToList();
+            var payments = await _context.FeePayments.Where(p => childrenIds.Contains(p.StudentId)).ToListAsync();
+
+            var report = new List<object>();
+
+            foreach(var s in students)
+            {
+                var fStruct = feeStructures.Where(f => f.ClassName == s.CurrentClass).OrderByDescending(f => f.AcademicYear).FirstOrDefault();
+                decimal totalFee = fStruct?.TotalFee ?? 0;
+                decimal paid = payments.Where(p => p.StudentId == s.Id).Sum(p => p.AmountPaid);
+                decimal pending = totalFee - paid;
+                if (pending < 0) pending = 0;
+
+                string status = pending == 0 && totalFee > 0 ? "Paid" : (paid > 0 && pending > 0 ? "Partially Paid" : (totalFee > 0 ? "Pending" : "N/A"));
+
+                report.Add(new {
+                    StudentId = s.Id,
+                    StudentName = s.FirstName + " " + s.LastName,
+                    AdmissionNumber = s.AdmissionNumber,
+                    Class = s.CurrentClass,
+                    TotalFee = totalFee,
+                    PaidFee = paid,
+                    PendingFee = pending,
+                    Status = status
+                });
+            }
+
+            return Ok(report);
+        }
+
+        [HttpGet("Parent/Payment")]
+        [Authorize(Roles = "Parent,PARENT,parent")]
+        public async Task<ActionResult<IEnumerable<FeePayment>>> GetParentPayments()
+        {
+            var userName = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userName)) return Unauthorized();
+
+            var childrenIds = await _context.Students
+                .Where(s => s.ParentContactNumber == userName && s.IsActive)
+                .Select(s => s.Id)
+                .ToListAsync();
+
+            return await _context.FeePayments
+                .Include(p => p.Student)
+                .Where(p => childrenIds.Contains(p.StudentId))
+                .OrderByDescending(p => p.PaymentDate)
+                .ToListAsync();
+        }
+
         private bool FeePaymentExists(int id)
         {
             return _context.FeePayments.Any(e => e.Id == id);
