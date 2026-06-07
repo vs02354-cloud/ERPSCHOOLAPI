@@ -109,10 +109,7 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = string.Empty;
 });
 
-if (app.Environment.IsDevelopment())
-{
-    // Development specific middleware
-}
+app.UseDeveloperExceptionPage();
 
 app.UseHttpsRedirection();
 
