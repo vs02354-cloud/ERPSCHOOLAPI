@@ -159,5 +159,34 @@ namespace SchoolERP.Api.Controllers
                 Records = records
             });
         }
+
+        [HttpGet("Parent/Today")]
+        [Authorize(Roles = "Parent,PARENT,parent")]
+        public async Task<IActionResult> GetParentTodayAttendance()
+        {
+            var userName = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userName)) return Unauthorized("User not identified.");
+
+            var childrenIds = await _context.Students
+                .Where(s => s.ParentContactNumber == userName && s.IsActive)
+                .Select(s => s.Id)
+                .ToListAsync();
+
+            if (!childrenIds.Any()) return Ok(new List<object>());
+
+            var today = DateTime.UtcNow.Date;
+
+            var attendances = await _context.Attendances
+                .Where(a => childrenIds.Contains(a.StudentId) && a.Date.Date == today)
+                .ToListAsync();
+
+            var result = childrenIds.Select(studentId => new
+            {
+                StudentId = studentId,
+                Status = attendances.FirstOrDefault(a => a.StudentId == studentId)?.Status ?? "Not Marked"
+            });
+
+            return Ok(result);
+        }
     }
 }
