@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,6 +11,10 @@ namespace SchoolERP.Api.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // The AdmissionInquiry table already exists in the database.
+            // EF Core generated this because it was missing from the previous snapshot,
+            // but we must skip it to prevent SqlException: There is already an object named 'AdmissionInquiry'.
+            /*
             migrationBuilder.CreateTable(
                 name: "AdmissionInquiry",
                 columns: table => new
@@ -45,6 +49,7 @@ namespace SchoolERP.Api.Migrations
                 {
                     table.PrimaryKey("PK_AdmissionInquiry", x => x.InquiryId);
                 });
+            */
 
             migrationBuilder.CreateTable(
                 name: "AssignmentMasters",
@@ -124,8 +129,8 @@ namespace SchoolERP.Api.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "AdmissionInquiry");
+            // migrationBuilder.DropTable(
+            //     name: "AdmissionInquiry");
 
             migrationBuilder.DropTable(
                 name: "AssignmentSubmissions");
