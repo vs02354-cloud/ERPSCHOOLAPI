@@ -51,6 +51,9 @@ namespace SchoolERP.Api.Migrations
                 });
             */
 
+            // The AssignmentMasters and AssignmentSubmissions tables also already exist in the live database.
+            // Commenting out to prevent SqlException 2714.
+            /*
             migrationBuilder.CreateTable(
                 name: "AssignmentMasters",
                 columns: table => new
@@ -109,7 +112,9 @@ namespace SchoolERP.Api.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+            */
 
+            /*
             migrationBuilder.CreateIndex(
                 name: "IX_AssignmentMasters_CreatorId",
                 table: "AssignmentMasters",
@@ -124,6 +129,7 @@ namespace SchoolERP.Api.Migrations
                 name: "IX_AssignmentSubmissions_StudentId",
                 table: "AssignmentSubmissions",
                 column: "StudentId");
+            */
         }
 
         /// <inheritdoc />
@@ -132,11 +138,11 @@ namespace SchoolERP.Api.Migrations
             // migrationBuilder.DropTable(
             //     name: "AdmissionInquiry");
 
-            migrationBuilder.DropTable(
-                name: "AssignmentSubmissions");
+            // migrationBuilder.DropTable(
+            //     name: "AssignmentSubmissions");
 
-            migrationBuilder.DropTable(
-                name: "AssignmentMasters");
+            // migrationBuilder.DropTable(
+            //     name: "AssignmentMasters");
         }
     }
 }
