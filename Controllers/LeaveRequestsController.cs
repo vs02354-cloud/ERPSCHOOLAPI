@@ -36,7 +36,7 @@ namespace SchoolERP.Api.Controllers
             var userRole = User.FindFirstValue("UserType");
             var userName = User.Identity?.Name;
 
-            if (userRole == "Parent")
+            if (userRole?.Equals("Parent", StringComparison.OrdinalIgnoreCase) == true)
             {
                 var childrenIds = await _context.Students
                     .Where(s => s.ParentContactNumber == userName || s.ParentUserId == userId)
@@ -49,7 +49,7 @@ namespace SchoolERP.Api.Controllers
                     .OrderByDescending(l => l.StartDate)
                     .ToListAsync();
             }
-            else if (userRole == "Student")
+            else if (userRole?.Equals("Student", StringComparison.OrdinalIgnoreCase) == true)
             {
                 var student = await _context.Students.FirstOrDefaultAsync(s => s.ApplicationUserId == userId);
                 if (student == null) return Ok(new List<LeaveRequest>());
@@ -73,7 +73,7 @@ namespace SchoolERP.Api.Controllers
             var userRole = User.FindFirstValue("UserType");
             var userName = User.Identity?.Name;
 
-            if (userRole == "Parent")
+            if (userRole?.Equals("Parent", StringComparison.OrdinalIgnoreCase) == true)
             {
                 if (leaveRequest.StudentId == null || leaveRequest.StudentId == 0)
                     return BadRequest("Student ID is required for Parent applications.");
@@ -81,7 +81,7 @@ namespace SchoolERP.Api.Controllers
                 var isValidChild = await _context.Students.AnyAsync(s => s.Id == leaveRequest.StudentId && (s.ParentContactNumber == userName || s.ParentUserId == userId));
                 if (!isValidChild) return Forbid();
             }
-            else if (userRole == "Student")
+            else if (userRole?.Equals("Student", StringComparison.OrdinalIgnoreCase) == true)
             {
                 var student = await _context.Students.FirstOrDefaultAsync(s => s.ApplicationUserId == userId);
                 if (student == null) return BadRequest("Student profile not found.");
