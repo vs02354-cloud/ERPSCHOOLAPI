@@ -24,7 +24,6 @@ namespace SchoolERP.Api.Controllers
         public async Task<ActionResult<IEnumerable<LeaveRequest>>> GetLeaveRequests()
         {
             return await _context.LeaveRequests
-                .Include(l => l.Employee)
                 .Include(l => l.Student)
                 .OrderByDescending(l => l.StartDate)
                 .ToListAsync();
@@ -62,14 +61,8 @@ namespace SchoolERP.Api.Controllers
             }
             else
             {
-                // Employee
-                var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Username == userName || e.MobileNumber == userName);
-                if (employee == null) return Ok(new List<LeaveRequest>());
-
-                return await _context.LeaveRequests
-                    .Where(l => l.EmployeeId == employee.Id)
-                    .OrderByDescending(l => l.StartDate)
-                    .ToListAsync();
+                // Employee leave is no longer supported in this table as EmployeeId was removed.
+                return Ok(new List<LeaveRequest>());
             }
         }
 
@@ -87,8 +80,6 @@ namespace SchoolERP.Api.Controllers
 
                 var isValidChild = await _context.Students.AnyAsync(s => s.Id == leaveRequest.StudentId && (s.ParentContactNumber == userName || s.ParentUserId == userId));
                 if (!isValidChild) return Forbid();
-                
-                leaveRequest.EmployeeId = null;
             }
             else if (userRole == "Student")
             {
@@ -96,15 +87,10 @@ namespace SchoolERP.Api.Controllers
                 if (student == null) return BadRequest("Student profile not found.");
                 
                 leaveRequest.StudentId = student.Id;
-                leaveRequest.EmployeeId = null;
             }
             else
             {
-                var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Username == userName || e.MobileNumber == userName);
-                if (employee == null) return BadRequest("Employee profile not found.");
-                
-                leaveRequest.EmployeeId = employee.Id;
-                leaveRequest.StudentId = null;
+                return BadRequest("Only Students and Parents can apply for leaves.");
             }
 
             leaveRequest.Status = "approve"; // As per requirement

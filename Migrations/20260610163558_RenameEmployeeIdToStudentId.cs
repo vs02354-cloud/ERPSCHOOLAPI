@@ -1,11 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace SchoolERP.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class AddLeaveModuleStudentId : Migration
+    public partial class RenameEmployeeIdToStudentId : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -14,31 +14,27 @@ namespace SchoolERP.Api.Migrations
                 name: "FK_LeaveRequests_Employees_EmployeeId",
                 table: "LeaveRequests");
 
-            migrationBuilder.AlterColumn<int>(
+            migrationBuilder.DropIndex(
+                name: "IX_LeaveRequests_EmployeeId",
+                table: "LeaveRequests");
+
+            migrationBuilder.RenameColumn(
                 name: "EmployeeId",
+                table: "LeaveRequests",
+                newName: "StudentId");
+
+            migrationBuilder.AlterColumn<int>(
+                name: "StudentId",
                 table: "LeaveRequests",
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
                 oldType: "int");
 
-            migrationBuilder.AddColumn<int>(
-                name: "StudentId",
-                table: "LeaveRequests",
-                type: "int",
-                nullable: true);
-
             migrationBuilder.CreateIndex(
                 name: "IX_LeaveRequests_StudentId",
                 table: "LeaveRequests",
                 column: "StudentId");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_LeaveRequests_Employees_EmployeeId",
-                table: "LeaveRequests",
-                column: "EmployeeId",
-                principalTable: "Employees",
-                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_LeaveRequests_Students_StudentId",
@@ -52,10 +48,6 @@ namespace SchoolERP.Api.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_LeaveRequests_Employees_EmployeeId",
-                table: "LeaveRequests");
-
-            migrationBuilder.DropForeignKey(
                 name: "FK_LeaveRequests_Students_StudentId",
                 table: "LeaveRequests");
 
@@ -63,12 +55,8 @@ namespace SchoolERP.Api.Migrations
                 name: "IX_LeaveRequests_StudentId",
                 table: "LeaveRequests");
 
-            migrationBuilder.DropColumn(
-                name: "StudentId",
-                table: "LeaveRequests");
-
             migrationBuilder.AlterColumn<int>(
-                name: "EmployeeId",
+                name: "StudentId",
                 table: "LeaveRequests",
                 type: "int",
                 nullable: false,
@@ -76,6 +64,16 @@ namespace SchoolERP.Api.Migrations
                 oldClrType: typeof(int),
                 oldType: "int",
                 oldNullable: true);
+
+            migrationBuilder.RenameColumn(
+                name: "StudentId",
+                table: "LeaveRequests",
+                newName: "EmployeeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LeaveRequests_EmployeeId",
+                table: "LeaveRequests",
+                column: "EmployeeId");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_LeaveRequests_Employees_EmployeeId",

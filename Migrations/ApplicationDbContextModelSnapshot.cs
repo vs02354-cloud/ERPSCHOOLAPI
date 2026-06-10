@@ -858,9 +858,6 @@ namespace SchoolERP.Api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("EmployeeId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
@@ -883,8 +880,6 @@ namespace SchoolERP.Api.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("EmployeeId");
 
                     b.HasIndex("StudentId");
 
@@ -1347,15 +1342,9 @@ namespace SchoolERP.Api.Migrations
 
             modelBuilder.Entity("SchoolERP.Api.Models.LeaveRequest", b =>
                 {
-                    b.HasOne("SchoolERP.Api.Models.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId");
-
                     b.HasOne("SchoolERP.Api.Models.Student", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId");
-
-                    b.Navigation("Employee");
 
                     b.Navigation("Student");
                 });
