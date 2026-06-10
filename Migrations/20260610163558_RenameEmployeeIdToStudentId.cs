@@ -10,38 +10,44 @@ namespace SchoolERP.Api.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_LeaveRequests_Employees_EmployeeId",
-                table: "LeaveRequests");
+            migrationBuilder.Sql(@"
+                IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_LeaveRequests_Employees_EmployeeId]') AND parent_object_id = OBJECT_ID(N'[LeaveRequests]'))
+                BEGIN
+                    ALTER TABLE [LeaveRequests] DROP CONSTRAINT [FK_LeaveRequests_Employees_EmployeeId];
+                END
 
-            migrationBuilder.DropIndex(
-                name: "IX_LeaveRequests_EmployeeId",
-                table: "LeaveRequests");
+                IF EXISTS (SELECT * FROM sys.indexes WHERE name = N'IX_LeaveRequests_EmployeeId' AND object_id = OBJECT_ID(N'[LeaveRequests]'))
+                BEGIN
+                    DROP INDEX [IX_LeaveRequests_EmployeeId] ON [LeaveRequests];
+                END
 
-            migrationBuilder.RenameColumn(
-                name: "EmployeeId",
-                table: "LeaveRequests",
-                newName: "StudentId");
+                IF EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'EmployeeId' AND Object_ID = Object_ID(N'[LeaveRequests]'))
+                BEGIN
+                    EXEC sp_rename N'[LeaveRequests].[EmployeeId]', N'StudentId', N'COLUMN';
+                END
 
-            migrationBuilder.AlterColumn<int>(
-                name: "StudentId",
-                table: "LeaveRequests",
-                type: "int",
-                nullable: true,
-                oldClrType: typeof(int),
-                oldType: "int");
+                DECLARE @var0 sysname;
+                SELECT @var0 = [d].[name]
+                FROM [sys].[default_constraints] [d]
+                INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+                WHERE ([d].[parent_object_id] = OBJECT_ID(N'[LeaveRequests]') AND [c].[name] = N'StudentId');
+                IF @var0 IS NOT NULL EXEC(N'ALTER TABLE [LeaveRequests] DROP CONSTRAINT [' + @var0 + '];');
+                
+                IF EXISTS(SELECT 1 FROM sys.columns WHERE Name = N'StudentId' AND Object_ID = Object_ID(N'[LeaveRequests]'))
+                BEGIN
+                    ALTER TABLE [LeaveRequests] ALTER COLUMN [StudentId] int NULL;
+                END
 
-            migrationBuilder.CreateIndex(
-                name: "IX_LeaveRequests_StudentId",
-                table: "LeaveRequests",
-                column: "StudentId");
+                IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = N'IX_LeaveRequests_StudentId' AND object_id = OBJECT_ID(N'[LeaveRequests]'))
+                BEGIN
+                    CREATE INDEX [IX_LeaveRequests_StudentId] ON [LeaveRequests] ([StudentId]);
+                END
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_LeaveRequests_Students_StudentId",
-                table: "LeaveRequests",
-                column: "StudentId",
-                principalTable: "Students",
-                principalColumn: "Id");
+                IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_LeaveRequests_Students_StudentId]') AND parent_object_id = OBJECT_ID(N'[LeaveRequests]'))
+                BEGIN
+                    ALTER TABLE [LeaveRequests] ADD CONSTRAINT [FK_LeaveRequests_Students_StudentId] FOREIGN KEY ([StudentId]) REFERENCES [Students] ([Id]);
+                END
+            ");
         }
 
         /// <inheritdoc />
