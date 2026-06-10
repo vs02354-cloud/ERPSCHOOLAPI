@@ -7,8 +7,11 @@ namespace SchoolERP.Api.Models
         [Key]
         public int Id { get; set; }
 
-        public int EmployeeId { get; set; }
+        public int? EmployeeId { get; set; }
         public Employee? Employee { get; set; }
+
+        public int? StudentId { get; set; }
+        public Student? Student { get; set; }
 
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
@@ -16,7 +19,7 @@ namespace SchoolERP.Api.Models
         [Required]
         public string Reason { get; set; } = string.Empty;
 
-        public string Status { get; set; } = "Pending"; // Pending, Approved, Rejected
+        public string Status { get; set; } = "approve"; // approve, Rejected
         public string ManagerRemarks { get; set; } = string.Empty;
     }
 }
