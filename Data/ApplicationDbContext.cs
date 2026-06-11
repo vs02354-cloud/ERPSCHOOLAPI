@@ -32,6 +32,7 @@ namespace SchoolERP.Api.Data
         public DbSet<TransportRoute> TransportRoutes { get; set; }
         public DbSet<Notice> Notices { get; set; }
         public DbSet<AdmissionInquiry> AdmissionInquiries { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         // Phase 5: Assignments
         public DbSet<AssignmentMaster> AssignmentMasters { get; set; }
