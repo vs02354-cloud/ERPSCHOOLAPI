@@ -132,6 +132,66 @@ namespace SchoolERP.Api.Controllers
 
             return CreatedAtAction(nameof(GetMyLeaves), new { id = leaveRequest.Id }, leaveRequest);
         }
+
+        [HttpPut("{id}/cancel")]
+        public async Task<IActionResult> CancelLeaveRequest(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userRole = User.FindFirstValue("UserType");
+            var userName = User.Identity?.Name;
+
+            var leaveRequest = await _context.LeaveRequests.FindAsync(id);
+            if (leaveRequest == null) return NotFound();
+
+            // Authorization
+            if (userRole?.Equals("Parent", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                var isValidChild = await _context.Students.AnyAsync(s => s.Id == leaveRequest.StudentId && (s.ParentContactNumber == userName || s.ParentUserId == userId));
+                if (!isValidChild) return Forbid();
+            }
+            else if (userRole?.Equals("Student", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                var student = await _context.Students.FirstOrDefaultAsync(s => s.ApplicationUserId == userId);
+                if (student == null || leaveRequest.StudentId != student.Id) return Forbid();
+            }
+            else
+            {
+                return Forbid();
+            }
+
+            // Only allow cancellation if start date is today or in the future
+            if (leaveRequest.StartDate.Date < DateTime.UtcNow.Date)
+            {
+                return BadRequest("Cannot cancel past leave requests.");
+            }
+
+            if (leaveRequest.Status == "cancelled")
+            {
+                return BadRequest("Leave request is already cancelled.");
+            }
+
+            leaveRequest.Status = "cancelled";
+
+            // Revert attendance records
+            if (leaveRequest.StudentId.HasValue && leaveRequest.StudentId.Value > 0)
+            {
+                var studentId = leaveRequest.StudentId.Value;
+                var currDate = leaveRequest.StartDate.Date;
+                var endDate = leaveRequest.EndDate.Date;
+
+                var attendancesToDelete = await _context.Attendances
+                    .Where(a => a.StudentId == studentId && a.Date.Date >= currDate && a.Date.Date <= endDate && a.Status == "On Leave")
+                    .ToListAsync();
+
+                if (attendancesToDelete.Any())
+                {
+                    _context.Attendances.RemoveRange(attendancesToDelete);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Leave request cancelled successfully" });
+        }
         
         [HttpGet("my-students")]
         [Authorize(Roles = "Parent,PARENT,parent")]
