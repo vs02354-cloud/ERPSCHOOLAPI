@@ -98,6 +98,38 @@ namespace SchoolERP.Api.Controllers
             _context.LeaveRequests.Add(leaveRequest);
             await _context.SaveChangesAsync();
 
+            // Auto-mark attendance as "On Leave" for the requested dates
+            if (leaveRequest.StudentId.HasValue && leaveRequest.StudentId.Value > 0)
+            {
+                var studentId = leaveRequest.StudentId.Value;
+                var currDate = leaveRequest.StartDate.Date;
+                var endDate = leaveRequest.EndDate.Date;
+
+                while (currDate <= endDate)
+                {
+                    var existingAttendance = await _context.Attendances
+                        .FirstOrDefaultAsync(a => a.StudentId == studentId && a.Date.Date == currDate);
+
+                    if (existingAttendance != null)
+                    {
+                        existingAttendance.Status = "On Leave";
+                        existingAttendance.Remarks = "Leave Approved";
+                    }
+                    else
+                    {
+                        _context.Attendances.Add(new Attendance
+                        {
+                            StudentId = studentId,
+                            Date = currDate,
+                            Status = "On Leave",
+                            Remarks = "Leave Approved"
+                        });
+                    }
+                    currDate = currDate.AddDays(1);
+                }
+                await _context.SaveChangesAsync();
+            }
+
             return CreatedAtAction(nameof(GetMyLeaves), new { id = leaveRequest.Id }, leaveRequest);
         }
         
