@@ -38,9 +38,9 @@ namespace SchoolERP.Api.Controllers
 
             // Generate TC Number
             var count = await _context.TransferCertificates.CountAsync();
-            request.TCNumber = $"TC{DateTime.Now.Year}{(count + 1):D4}";
-            request.IssueDate = DateTime.UtcNow;
-            request.CreatedDate = DateTime.UtcNow;
+            request.TCNumber = $"TC{SchoolERP.Api.Utils.TimeUtils.GetIstTime().Year}{(count + 1):D4}";
+            request.IssueDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
+            request.CreatedDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
 
             // Save TC
             _context.TransferCertificates.Add(request);

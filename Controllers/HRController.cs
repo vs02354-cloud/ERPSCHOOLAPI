@@ -117,7 +117,7 @@ namespace SchoolERP.Api.Controllers
 
             // Update Employee properties
             _context.Entry(existing).CurrentValues.SetValues(dto.Employee);
-            existing.UpdatedDate = DateTime.UtcNow;
+            existing.UpdatedDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
 
             // Attempt to get user id to set UpdatedBy
             var claimsUserId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
@@ -192,7 +192,7 @@ namespace SchoolERP.Api.Controllers
         [Authorize(Roles = "Admin,Super Admin,School Admin,Accountant")]
         public async Task<ActionResult<SalarySlip>> GenerateSalarySlip(SalarySlip slip)
         {
-            slip.GeneratedDate = DateTime.UtcNow;
+            slip.GeneratedDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
             _context.SalarySlips.Add(slip);
             await _context.SaveChangesAsync();
             return Ok(slip);

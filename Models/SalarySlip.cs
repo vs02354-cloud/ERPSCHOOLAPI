@@ -19,6 +19,6 @@ namespace SchoolERP.Api.Models
 
         public decimal NetSalary => BasicSalary + Allowances - Deductions;
 
-        public DateTime GeneratedDate { get; set; } = DateTime.UtcNow;
+        public DateTime GeneratedDate { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
     }
 }

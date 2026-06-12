@@ -20,6 +20,6 @@ namespace SchoolERP.Api.Models
         public int TotalCopies { get; set; }
         public int AvailableCopies { get; set; }
 
-        public DateTime AddedDate { get; set; } = DateTime.UtcNow;
+        public DateTime AddedDate { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
     }
 }

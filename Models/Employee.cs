@@ -57,7 +57,7 @@ namespace SchoolERP.Api.Models
         public string? IDProofPath { get; set; }
 
         // Audit Fields 
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedDate { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
         public DateTime? UpdatedDate { get; set; }
         public int? CreatedBy { get; set; }
         public int? UpdatedBy { get; set; }

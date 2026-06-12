@@ -31,7 +31,7 @@ namespace SchoolERP.Api.Controllers
             {
                 assignment.CreatedBy = userId;
             }
-            assignment.CreatedDate = DateTime.UtcNow;
+            assignment.CreatedDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
 
             _context.AssignmentMasters.Add(assignment);
             await _context.SaveChangesAsync();
@@ -144,7 +144,7 @@ namespace SchoolERP.Api.Controllers
 
             submission.AssignmentId = id;
             submission.StudentId = student.Id;
-            submission.SubmittedDate = DateTime.UtcNow;
+            submission.SubmittedDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
 
             if (submission.SubmittedDate > assignment.DueDate)
             {
@@ -240,7 +240,7 @@ namespace SchoolERP.Api.Controllers
                     {
                         status = mySubmission.Status; // "Submitted", "Late Submitted", "Evaluated", "Rejected"
                     }
-                    else if (a.DueDate < DateTime.UtcNow)
+                    else if (a.DueDate < SchoolERP.Api.Utils.TimeUtils.GetIstTime())
                     {
                         status = "Overdue";
                     }

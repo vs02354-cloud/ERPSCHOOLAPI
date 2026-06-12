@@ -160,11 +160,11 @@ namespace SchoolERP.Api.Controllers
                 }
             }
 
-            payment.PaymentDate = DateTime.UtcNow;
+            payment.PaymentDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
             
             // Generate simple receipt number
             var count = await _context.FeePayments.CountAsync();
-            payment.ReceiptNumber = $"REC{DateTime.Now.Year}{(count + 1):D5}";
+            payment.ReceiptNumber = $"REC{SchoolERP.Api.Utils.TimeUtils.GetIstTime().Year}{(count + 1):D5}";
 
             _context.FeePayments.Add(payment);
             await _context.SaveChangesAsync();
@@ -193,7 +193,7 @@ namespace SchoolERP.Api.Controllers
                             StudentId = student.Id,
                             FeePaymentId = payment.Id,
                             CommissionAmount = commissionAmount,
-                            DateEarned = DateTime.UtcNow,
+                            DateEarned = SchoolERP.Api.Utils.TimeUtils.GetIstTime(),
                             IsPaid = false
                         };
                         _context.TeacherCommissions.Add(commission);
@@ -253,7 +253,7 @@ namespace SchoolERP.Api.Controllers
         [Authorize(Roles = "Admin,Super Admin,School Admin,Accountant,Principal")]
         public async Task<ActionResult<object>> GetDashboardStats()
         {
-            var today = DateTime.UtcNow.Date;
+            var today = SchoolERP.Api.Utils.TimeUtils.GetIstTime().Date;
             
             var totalCollection = await _context.FeePayments.SumAsync(p => p.AmountPaid);
             var todayCollection = await _context.FeePayments
@@ -295,7 +295,7 @@ namespace SchoolERP.Api.Controllers
             
             for (int i = 5; i >= 0; i--)
             {
-                var targetDate = DateTime.UtcNow.AddMonths(-i);
+                var targetDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime().AddMonths(-i);
                 
                 var monthPayments = payments.Where(p => p.PaymentDate.Month == targetDate.Month && p.PaymentDate.Year == targetDate.Year);
                 var revenue = monthPayments.Sum(p => p.AmountPaid);
@@ -403,7 +403,7 @@ namespace SchoolERP.Api.Controllers
                 return new { TotalCollection = 0, TodayCollection = 0, PendingFees = 0, TotalStudentsPaid = 0 };
             }
 
-            var today = DateTime.UtcNow.Date;
+            var today = SchoolERP.Api.Utils.TimeUtils.GetIstTime().Date;
             
             var totalCollection = await _context.FeePayments
                 .Where(p => childrenIds.Contains(p.StudentId))

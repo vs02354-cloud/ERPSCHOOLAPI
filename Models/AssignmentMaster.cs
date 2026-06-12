@@ -33,7 +33,7 @@ namespace SchoolERP.Api.Models
         public string CreatedBy { get; set; } = string.Empty;
         public ApplicationUser? Creator { get; set; }
 
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedDate { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
 
         public ICollection<AssignmentSubmission>? Submissions { get; set; }
     }

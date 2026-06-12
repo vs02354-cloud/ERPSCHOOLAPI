@@ -160,7 +160,7 @@ namespace SchoolERP.Api.Controllers
             }
 
             // Only allow cancellation if start date is today or in the future
-            if (leaveRequest.StartDate.Date < DateTime.UtcNow.Date)
+            if (leaveRequest.StartDate.Date < SchoolERP.Api.Utils.TimeUtils.GetIstTime().Date)
             {
                 return BadRequest("Cannot cancel past leave requests.");
             }

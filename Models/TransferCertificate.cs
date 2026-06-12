@@ -18,7 +18,7 @@ namespace SchoolERP.Api.Models
         public string TCNumber { get; set; } = string.Empty;
 
         [Required]
-        public DateTime IssueDate { get; set; } = DateTime.UtcNow;
+        public DateTime IssueDate { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
 
         [Required]
         public string ReasonForLeaving { get; set; } = string.Empty;
@@ -27,6 +27,6 @@ namespace SchoolERP.Api.Models
         
         public string Conduct { get; set; } = string.Empty;
 
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedDate { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
     }
 }

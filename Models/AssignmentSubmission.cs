@@ -19,7 +19,7 @@ namespace SchoolERP.Api.Models
         [MaxLength(500)]
         public string? FilePath { get; set; }
 
-        public DateTime SubmittedDate { get; set; } = DateTime.UtcNow;
+        public DateTime SubmittedDate { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
 
         [MaxLength(20)]
         public string Status { get; set; } = "Pending"; // Pending, Submitted, Late Submitted, Evaluated, Rejected

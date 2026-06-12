@@ -64,8 +64,8 @@ namespace SchoolERP.Api.Controllers
         {
             // Auto generate Admission number based on year + count
             var count = await _context.Students.CountAsync();
-            student.AdmissionNumber = $"ADM{DateTime.Now.Year}{(count + 1):D4}";
-            student.AdmissionDate = DateTime.UtcNow;
+            student.AdmissionNumber = $"ADM{SchoolERP.Api.Utils.TimeUtils.GetIstTime().Year}{(count + 1):D4}";
+            student.AdmissionDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
 
             _context.Students.Add(student);
             await _context.SaveChangesAsync();

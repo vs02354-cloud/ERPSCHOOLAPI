@@ -28,14 +28,14 @@ namespace SchoolERP.Api.Controllers
                 return BadRequest(ModelState);
             }
 
-            var today = DateTime.UtcNow.Date;
+            var today = SchoolERP.Api.Utils.TimeUtils.GetIstTime().Date;
             var dailyCount = await _context.AdmissionInquiries.CountAsync(i => i.InquiryDate.Date == today);
             var inquiryNo = $"INQ-{today:yyyyMMdd}-{(dailyCount + 1):D3}";
 
             var inquiry = new AdmissionInquiry
             {
                 InquiryNo = inquiryNo,
-                InquiryDate = DateTime.UtcNow,
+                InquiryDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime(),
                 StudentName = dto.StudentName,
                 DateOfBirth = dto.DateOfBirth,
                 Gender = dto.Gender,
@@ -52,7 +52,7 @@ namespace SchoolERP.Api.Controllers
                 InquirySource = dto.InquirySource,
                 Remarks = dto.Remarks,
                 InquiryStatus = "New",
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime()
             };
 
             // If an Admin/User is logged in and creating it on behalf of someone, record their ID.
@@ -130,11 +130,11 @@ namespace SchoolERP.Api.Controllers
             if (!string.IsNullOrEmpty(dto.Remarks))
             {
                 // Append remarks with date
-                var newRemark = $"[{DateTime.UtcNow:yyyy-MM-dd}] {dto.Remarks}";
+                var newRemark = $"[{SchoolERP.Api.Utils.TimeUtils.GetIstTime():yyyy-MM-dd}] {dto.Remarks}";
                 inquiry.Remarks = string.IsNullOrEmpty(inquiry.Remarks) ? newRemark : $"{inquiry.Remarks}\n{newRemark}";
             }
 
-            inquiry.ModifiedDate = DateTime.UtcNow;
+            inquiry.ModifiedDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
 
             await _context.SaveChangesAsync();
 

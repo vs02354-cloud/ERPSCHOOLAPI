@@ -174,7 +174,7 @@ namespace SchoolERP.Api.Controllers
 
             if (!childrenIds.Any()) return Ok(new List<object>());
 
-            var today = DateTime.UtcNow.Date;
+            var today = SchoolERP.Api.Utils.TimeUtils.GetIstTime().Date;
 
             var attendances = await _context.Attendances
                 .Where(a => childrenIds.Contains(a.StudentId) && a.Date.Date == today)

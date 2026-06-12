@@ -13,7 +13,7 @@ namespace SchoolERP.Api.Models
         public string IssuedToUserId { get; set; } = string.Empty; // AspNetUsers Id
         public ApplicationUser? IssuedToUser { get; set; }
 
-        public DateTime IssueDate { get; set; } = DateTime.UtcNow;
+        public DateTime IssueDate { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
         public DateTime DueDate { get; set; }
         public DateTime? ReturnDate { get; set; }
 

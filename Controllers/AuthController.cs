@@ -81,8 +81,8 @@ namespace SchoolERP.Api.Controllers
                         ApplicationUserId = user.Id,
                         FirstName = model.FirstName,
                         LastName = model.LastName,
-                        AdmissionNumber = $"ADM{DateTime.Now.Year}{(count + 1):D4}",
-                        AdmissionDate = DateTime.UtcNow
+                        AdmissionNumber = $"ADM{SchoolERP.Api.Utils.TimeUtils.GetIstTime().Year}{(count + 1):D4}",
+                        AdmissionDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime()
                     };
                     _context.Students.Add(student);
                 }
@@ -99,7 +99,7 @@ namespace SchoolERP.Api.Controllers
                     var count = _context.Employees.Count();
                     var employee = new Employee
                     {
-                        EmployeeCode = $"EMP{DateTime.Now.Year}{(count + 1):D4}",
+                        EmployeeCode = $"EMP{SchoolERP.Api.Utils.TimeUtils.GetIstTime().Year}{(count + 1):D4}",
                         FirstName = model.FirstName,
                         LastName = model.LastName,
                         Username = model.Email,
@@ -167,7 +167,7 @@ namespace SchoolERP.Api.Controllers
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
-                expires: DateTime.Now.AddMinutes(Convert.ToDouble(jwtSettings["ExpiryInMinutes"])),
+                expires: SchoolERP.Api.Utils.TimeUtils.GetIstTime().AddMinutes(Convert.ToDouble(jwtSettings["ExpiryInMinutes"])),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
                 );

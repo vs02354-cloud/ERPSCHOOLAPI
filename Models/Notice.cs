@@ -15,7 +15,7 @@ namespace SchoolERP.Api.Models
 
         public string TargetAudience { get; set; } = "All"; // All, Student, Teacher, Parent
 
-        public DateTime PublishDate { get; set; } = DateTime.UtcNow;
+        public DateTime PublishDate { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
 
         public string CreatedById { get; set; } = string.Empty;
         public ApplicationUser? CreatedBy { get; set; }

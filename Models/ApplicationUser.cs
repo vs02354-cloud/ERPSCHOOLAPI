@@ -11,6 +11,6 @@ namespace SchoolERP.Api.Models
         public string UserType { get; set; } = "Student"; 
         
         public bool IsActive { get; set; } = true;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
     }
 }

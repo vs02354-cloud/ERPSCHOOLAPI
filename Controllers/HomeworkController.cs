@@ -22,7 +22,7 @@ namespace SchoolERP.Api.Controllers
         [Authorize(Roles = "Admin,Super Admin,School Admin,Teacher")]
         public async Task<ActionResult<Homework>> AssignHomework(Homework homework)
         {
-            homework.AssignedDate = DateTime.UtcNow;
+            homework.AssignedDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
             _context.Homeworks.Add(homework);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetHomework), new { id = homework.Id }, homework);

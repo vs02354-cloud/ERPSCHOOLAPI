@@ -14,7 +14,7 @@ namespace SchoolERP.Api.Models
         public string ReceiptNumber { get; set; } = string.Empty;
 
         public decimal AmountPaid { get; set; }
-        public DateTime PaymentDate { get; set; } = DateTime.UtcNow;
+        public DateTime PaymentDate { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
 
         [Required]
         public string PaymentMode { get; set; } = string.Empty; // Cash, UPI, Card, NetBanking

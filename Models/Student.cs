@@ -36,7 +36,7 @@ namespace SchoolERP.Api.Models
         public string PreviousSchool { get; set; } = string.Empty;
         
         public bool TransportRequired { get; set; }
-        public DateTime AdmissionDate { get; set; } = DateTime.UtcNow;
+        public DateTime AdmissionDate { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
 
         // TC tracking
         public bool IsActive { get; set; } = true;

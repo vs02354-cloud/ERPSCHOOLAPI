@@ -90,7 +90,7 @@ namespace SchoolERP.Api.Controllers
                 Message = dto.Message,
                 UserId = userId,
                 SenderId = senderId,
-                DateSent = DateTime.UtcNow,
+                DateSent = SchoolERP.Api.Utils.TimeUtils.GetIstTime(),
                 IsRead = false
             }).ToList();
 

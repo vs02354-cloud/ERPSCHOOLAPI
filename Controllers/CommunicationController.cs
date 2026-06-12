@@ -62,7 +62,7 @@ namespace SchoolERP.Api.Controllers
         [Authorize(Roles = "Admin,Super Admin,School Admin,Principal")]
         public async Task<ActionResult<Notice>> CreateNotice(Notice notice)
         {
-            notice.PublishDate = DateTime.UtcNow;
+            notice.PublishDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
             _context.Notices.Add(notice);
             await _context.SaveChangesAsync();
             

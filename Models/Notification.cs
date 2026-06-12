@@ -24,6 +24,6 @@ namespace SchoolERP.Api.Models
 
         public bool IsRead { get; set; } = false;
 
-        public DateTime DateSent { get; set; } = DateTime.UtcNow;
+        public DateTime DateSent { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
     }
 }

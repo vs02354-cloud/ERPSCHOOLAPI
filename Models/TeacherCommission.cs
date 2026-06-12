@@ -18,7 +18,7 @@ namespace SchoolERP.Api.Models
 
         public decimal CommissionAmount { get; set; }
 
-        public DateTime DateEarned { get; set; } = DateTime.UtcNow;
+        public DateTime DateEarned { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
 
         public bool IsPaid { get; set; } = false;
     }

@@ -21,7 +21,7 @@ namespace SchoolERP.Api.Models
 
         public string Description { get; set; } = string.Empty;
 
-        public DateTime AssignedDate { get; set; } = DateTime.UtcNow;
+        public DateTime AssignedDate { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
         public DateTime DueDate { get; set; }
 
         public string TeacherId { get; set; } = string.Empty;

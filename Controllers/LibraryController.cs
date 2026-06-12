@@ -54,7 +54,7 @@ namespace SchoolERP.Api.Controllers
                 return BadRequest("Book not available");
 
             book.AvailableCopies--;
-            issue.IssueDate = DateTime.UtcNow;
+            issue.IssueDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
             
             _context.BookIssues.Add(issue);
             await _context.SaveChangesAsync();
@@ -71,7 +71,7 @@ namespace SchoolERP.Api.Controllers
             if (issue.Status == "Returned")
                 return BadRequest("Book already returned");
 
-            issue.ReturnDate = DateTime.UtcNow;
+            issue.ReturnDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
             issue.Status = "Returned";
             issue.FineAmount = fineAmount;
             
