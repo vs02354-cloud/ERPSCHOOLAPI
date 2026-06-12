@@ -40,5 +40,9 @@ namespace SchoolERP.Api.Models
 
         // TC tracking
         public bool IsActive { get; set; } = true;
+
+        // Referral
+        public int? ReferredByEmployeeId { get; set; }
+        public Employee? ReferredByEmployee { get; set; }
     }
 }

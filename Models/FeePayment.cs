@@ -20,5 +20,9 @@ namespace SchoolERP.Api.Models
         public string PaymentMode { get; set; } = string.Empty; // Cash, UPI, Card, NetBanking
 
         public string Remarks { get; set; } = string.Empty;
+
+        // Dynamic Transport
+        public bool IncludesTransportFee { get; set; }
+        public decimal TransportFeeAmount { get; set; }
     }
 }

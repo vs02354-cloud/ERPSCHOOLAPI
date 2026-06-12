@@ -133,12 +133,30 @@ namespace SchoolERP.Api.Controllers
 
             if (feeStruct != null)
             {
-                var totalPaid = await _context.FeePayments.Where(p => p.StudentId == payment.StudentId).SumAsync(p => p.AmountPaid);
-                var pending = feeStruct.TotalFee - totalPaid;
-
-                if (payment.AmountPaid > pending)
+                if (payment.IncludesTransportFee)
                 {
-                    return BadRequest(new { Message = $"Payment amount ({payment.AmountPaid}) exceeds pending fee ({pending})." });
+                    payment.TransportFeeAmount = feeStruct.TransportFee;
+                }
+                else
+                {
+                    payment.TransportFeeAmount = 0;
+                }
+
+                decimal academicTotalFee = feeStruct.TotalFee - feeStruct.TransportFee;
+                var pastPayments = await _context.FeePayments.Where(p => p.StudentId == payment.StudentId).ToListAsync();
+                var totalAcademicPaid = pastPayments.Sum(p => p.AmountPaid - p.TransportFeeAmount);
+                var pendingAcademic = academicTotalFee - totalAcademicPaid;
+
+                decimal academicPayingNow = payment.AmountPaid - payment.TransportFeeAmount;
+
+                if (academicPayingNow > pendingAcademic)
+                {
+                    return BadRequest(new { Message = $"Academic payment amount ({academicPayingNow}) exceeds pending academic fee ({pendingAcademic})." });
+                }
+                
+                if (payment.IncludesTransportFee && payment.AmountPaid < feeStruct.TransportFee)
+                {
+                    return BadRequest(new { Message = $"Amount paid must cover the transport fee of {feeStruct.TransportFee}." });
                 }
             }
 
@@ -150,6 +168,40 @@ namespace SchoolERP.Api.Controllers
 
             _context.FeePayments.Add(payment);
             await _context.SaveChangesAsync();
+            
+            // Commission Generation
+            if (student.ReferredByEmployeeId.HasValue)
+            {
+                var commissionSetting = await _context.CommissionSettings.FirstOrDefaultAsync(c => c.IsActive);
+                if (commissionSetting != null)
+                {
+                    decimal commissionAmount = 0;
+                    if (commissionSetting.CommissionType == "Fixed")
+                    {
+                        commissionAmount = commissionSetting.CommissionValue;
+                    }
+                    else if (commissionSetting.CommissionType == "Percentage")
+                    {
+                        commissionAmount = payment.AmountPaid * (commissionSetting.CommissionValue / 100);
+                    }
+
+                    if (commissionAmount > 0)
+                    {
+                        var commission = new TeacherCommission
+                        {
+                            EmployeeId = student.ReferredByEmployeeId.Value,
+                            StudentId = student.Id,
+                            FeePaymentId = payment.Id,
+                            CommissionAmount = commissionAmount,
+                            DateEarned = DateTime.UtcNow,
+                            IsPaid = false
+                        };
+                        _context.TeacherCommissions.Add(commission);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+            }
+
             return Ok(payment);
         }
 
@@ -224,8 +276,9 @@ namespace SchoolERP.Api.Controllers
                 var fStruct = feeStructures.Where(f => f.ClassName == s.CurrentClass).OrderByDescending(f => f.AcademicYear).FirstOrDefault();
                 if (fStruct != null)
                 {
-                    var paid = payments.Where(p => p.StudentId == s.Id).Sum(p => p.AmountPaid);
-                    totalPendingFees += (fStruct.TotalFee - paid);
+                    decimal academicTotalFee = fStruct.TotalFee - fStruct.TransportFee;
+                    var paid = payments.Where(p => p.StudentId == s.Id).Sum(p => p.AmountPaid - p.TransportFeeAmount);
+                    totalPendingFees += (academicTotalFee - paid);
                 }
             }
 
@@ -277,11 +330,15 @@ namespace SchoolERP.Api.Controllers
             {
                 var fStruct = feeStructures.Where(f => f.ClassName == s.CurrentClass).OrderByDescending(f => f.AcademicYear).FirstOrDefault();
                 decimal totalFee = fStruct?.TotalFee ?? 0;
+                decimal academicTotalFee = totalFee - (fStruct?.TransportFee ?? 0);
+                
                 decimal paid = payments.Where(p => p.StudentId == s.Id).Sum(p => p.AmountPaid);
-                decimal pending = totalFee - paid;
+                decimal academicPaid = payments.Where(p => p.StudentId == s.Id).Sum(p => p.AmountPaid - p.TransportFeeAmount);
+                
+                decimal pending = academicTotalFee - academicPaid;
                 if (pending < 0) pending = 0;
 
-                string status = pending == 0 && totalFee > 0 ? "Paid" : (paid > 0 && pending > 0 ? "Partially Paid" : (totalFee > 0 ? "Pending" : "N/A"));
+                string status = pending == 0 && academicTotalFee > 0 ? "Paid" : (academicPaid > 0 && pending > 0 ? "Partially Paid" : (academicTotalFee > 0 ? "Pending" : "N/A"));
 
                 report.Add(new {
                     StudentId = s.Id,
@@ -307,17 +364,23 @@ namespace SchoolERP.Api.Controllers
 
             var fStruct = await _context.FeeStructures.Where(f => f.ClassName == student.CurrentClass).OrderByDescending(f => f.AcademicYear).FirstOrDefaultAsync();
             decimal totalFee = fStruct?.TotalFee ?? 0;
-            decimal paid = await _context.FeePayments.Where(p => p.StudentId == studentId).SumAsync(p => p.AmountPaid);
-            decimal pending = totalFee - paid;
+            decimal academicTotalFee = totalFee - (fStruct?.TransportFee ?? 0);
+            
+            var payments = await _context.FeePayments.Where(p => p.StudentId == studentId).ToListAsync();
+            decimal paid = payments.Sum(p => p.AmountPaid);
+            decimal academicPaid = payments.Sum(p => p.AmountPaid - p.TransportFeeAmount);
+            
+            decimal pending = academicTotalFee - academicPaid;
             if (pending < 0) pending = 0;
 
-            string status = pending == 0 && totalFee > 0 ? "Paid" : (paid > 0 && pending > 0 ? "Partially Paid" : (totalFee > 0 ? "Pending" : "N/A"));
+            string status = pending == 0 && academicTotalFee > 0 ? "Paid" : (academicPaid > 0 && pending > 0 ? "Partially Paid" : (academicTotalFee > 0 ? "Pending" : "N/A"));
 
             return new {
                 TotalFee = totalFee,
                 PaidFee = paid,
                 PendingFee = pending,
-                Status = status
+                Status = status,
+                TransportFee = fStruct?.TransportFee ?? 0
             };
         }
 
@@ -366,8 +429,9 @@ namespace SchoolERP.Api.Controllers
                 var fStruct = feeStructures.Where(f => f.ClassName == s.CurrentClass).OrderByDescending(f => f.AcademicYear).FirstOrDefault();
                 if (fStruct != null)
                 {
-                    var paid = payments.Where(p => p.StudentId == s.Id).Sum(p => p.AmountPaid);
-                    totalPendingFees += (fStruct.TotalFee - paid);
+                    decimal academicTotalFee = fStruct.TotalFee - fStruct.TransportFee;
+                    var paid = payments.Where(p => p.StudentId == s.Id).Sum(p => p.AmountPaid - p.TransportFeeAmount);
+                    totalPendingFees += (academicTotalFee - paid);
                 }
             }
 
@@ -395,11 +459,15 @@ namespace SchoolERP.Api.Controllers
             {
                 var fStruct = feeStructures.Where(f => f.ClassName == s.CurrentClass).OrderByDescending(f => f.AcademicYear).FirstOrDefault();
                 decimal totalFee = fStruct?.TotalFee ?? 0;
+                decimal academicTotalFee = totalFee - (fStruct?.TransportFee ?? 0);
+                
                 decimal paid = payments.Where(p => p.StudentId == s.Id).Sum(p => p.AmountPaid);
-                decimal pending = totalFee - paid;
+                decimal academicPaid = payments.Where(p => p.StudentId == s.Id).Sum(p => p.AmountPaid - p.TransportFeeAmount);
+                
+                decimal pending = academicTotalFee - academicPaid;
                 if (pending < 0) pending = 0;
 
-                string status = pending == 0 && totalFee > 0 ? "Paid" : (paid > 0 && pending > 0 ? "Partially Paid" : (totalFee > 0 ? "Pending" : "N/A"));
+                string status = pending == 0 && academicTotalFee > 0 ? "Paid" : (academicPaid > 0 && pending > 0 ? "Partially Paid" : (academicTotalFee > 0 ? "Pending" : "N/A"));
 
                 report.Add(new {
                     StudentId = s.Id,

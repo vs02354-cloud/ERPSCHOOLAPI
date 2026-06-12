@@ -152,6 +152,17 @@ namespace SchoolERP.Api.Controllers
             return NoContent();
         }
 
+        [HttpGet("Teachers")]
+        [Authorize(Roles = "Admin,Super Admin,School Admin,Principal,Receptionist")]
+        public async Task<ActionResult<IEnumerable<object>>> GetTeachers()
+        {
+            var teachers = await _context.Employees
+                .Where(e => e.EmployeeType == "Teaching" || e.Designation == "Teacher" || e.Designation == "Teaching")
+                .Select(e => new { e.Id, Name = e.FirstName + " " + (e.LastName ?? ""), e.EmployeeCode })
+                .ToListAsync();
+            return Ok(teachers);
+        }
+
         // --- Leave Requests ---
 
         [HttpPost("Leave")]
