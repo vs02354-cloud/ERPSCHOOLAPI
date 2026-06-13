@@ -117,12 +117,20 @@ namespace SchoolERP.Api.Controllers
         }
 
         [HttpPost("Payment")]
-        [Authorize(Roles = "Admin,Super Admin,School Admin,Accountant,Principal")]
+        [Authorize(Roles = "Admin,Super Admin,School Admin,Accountant,Principal,Parent,PARENT,parent")]
         public async Task<ActionResult<FeePayment>> CollectFee(FeePayment payment)
         {
             // Validate amount against pending fee
             var student = await _context.Students.FindAsync(payment.StudentId);
             if (student == null) return NotFound(new { Message = "Student not found" });
+
+            if (User.IsInRole("Parent") || User.IsInRole("PARENT") || User.IsInRole("parent"))
+            {
+                if (student.ParentContactNumber != User.Identity?.Name)
+                {
+                    return Forbid();
+                }
+            }
 
             // Hardcoding "2026-2027" as the current academic year for validation, or we could pass it.
             // Let's assume the frontend passes the expected validation or we just accept the payment if valid structure exists.
