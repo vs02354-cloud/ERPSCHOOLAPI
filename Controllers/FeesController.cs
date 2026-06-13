@@ -484,6 +484,43 @@ namespace SchoolERP.Api.Controllers
             return Ok(report);
         }
 
+        [HttpGet("Parent/Pending/Student/{studentId}")]
+        [Authorize(Roles = "Parent,PARENT,parent")]
+        public async Task<ActionResult<object>> GetParentStudentPendingFee(int studentId)
+        {
+            var userName = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userName)) return Unauthorized();
+
+            var student = await _context.Students.FindAsync(studentId);
+            if (student == null) return NotFound();
+
+            if (student.ParentContactNumber != userName)
+            {
+                return Forbid();
+            }
+
+            var fStruct = await _context.FeeStructures.Where(f => f.ClassName == student.CurrentClass).OrderByDescending(f => f.AcademicYear).FirstOrDefaultAsync();
+            decimal totalFee = fStruct?.TotalFee ?? 0;
+            decimal academicTotalFee = totalFee - (fStruct?.TransportFee ?? 0);
+            
+            var payments = await _context.FeePayments.Where(p => p.StudentId == studentId).ToListAsync();
+            decimal paid = payments.Sum(p => p.AmountPaid);
+            decimal academicPaid = payments.Sum(p => p.AmountPaid - p.TransportFeeAmount);
+
+            decimal pending = academicTotalFee - academicPaid;
+            if (pending < 0) pending = 0;
+
+            string status = pending == 0 && academicTotalFee > 0 ? "Paid" : (academicPaid > 0 && pending > 0 ? "Partially Paid" : (academicTotalFee > 0 ? "Pending" : "N/A"));
+
+            return new {
+                TotalFee = totalFee,
+                PaidFee = paid,
+                PendingFee = pending,
+                Status = status,
+                TransportFee = fStruct?.TransportFee ?? 0
+            };
+        }
+
         [HttpGet("Parent/Payment")]
         [Authorize(Roles = "Parent,PARENT,parent")]
         public async Task<ActionResult<IEnumerable<FeePayment>>> GetParentPayments()
