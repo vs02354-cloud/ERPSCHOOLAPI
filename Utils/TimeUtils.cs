@@ -10,5 +10,16 @@ namespace SchoolERP.Api.Utils
         {
             return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, IndiaStandardTime);
         }
+
+        public static DateTime ConvertToIst(DateTime dateTime)
+        {
+            if (dateTime.Kind == DateTimeKind.Utc)
+            {
+                return TimeZoneInfo.ConvertTimeFromUtc(dateTime, IndiaStandardTime);
+            }
+            // If it's Unspecified or Local, we assume it's UTC representation sent from frontend without 'Z'
+            // or we convert it directly. Best is to force it to UTC then to IST.
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(dateTime, DateTimeKind.Utc), IndiaStandardTime);
+        }
     }
 }

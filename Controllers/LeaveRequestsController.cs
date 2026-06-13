@@ -69,6 +69,9 @@ namespace SchoolERP.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<LeaveRequest>> CreateLeaveRequest(LeaveRequest leaveRequest)
         {
+            leaveRequest.StartDate = SchoolERP.Api.Utils.TimeUtils.ConvertToIst(leaveRequest.StartDate);
+            leaveRequest.EndDate = SchoolERP.Api.Utils.TimeUtils.ConvertToIst(leaveRequest.EndDate);
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var userRole = User.FindFirstValue("UserType");
             var userName = User.Identity?.Name;
