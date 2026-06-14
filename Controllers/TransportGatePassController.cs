@@ -48,11 +48,13 @@ namespace SchoolERP.Api.Controllers
             return gatePass;
         }
 
-        [HttpPost("generate/{studentId}")]
+        [HttpPost("generate/{studentIdentifier}")]
         [Authorize(Roles = "Admin,Super Admin,School Admin,Transport Manager")]
-        public async Task<ActionResult<TransportGatePass>> GenerateGatePass(int studentId)
+        public async Task<ActionResult<TransportGatePass>> GenerateGatePass(string studentIdentifier)
         {
-            var student = await _context.Students.Include(s => s.TransportRouteStop).FirstOrDefaultAsync(s => s.Id == studentId);
+            bool isNumeric = int.TryParse(studentIdentifier, out int parsedId);
+            var student = await _context.Students.Include(s => s.TransportRouteStop)
+                .FirstOrDefaultAsync(s => (isNumeric && s.Id == parsedId) || s.AdmissionNumber == studentIdentifier);
             if (student == null || !student.TransportRequired || student.TransportRouteStopId == null)
             {
                 return BadRequest("Student is not enrolled in transport");
@@ -69,7 +71,7 @@ namespace SchoolERP.Api.Controllers
             var vehicleId = route.Vehicles.First(v => v.IsActive).Id;
 
             // Invalidate old passes
-            var oldPasses = await _context.TransportGatePasses.Where(g => g.StudentId == studentId && g.IsActive).ToListAsync();
+            var oldPasses = await _context.TransportGatePasses.Where(g => g.StudentId == student.Id && g.IsActive).ToListAsync();
             foreach (var op in oldPasses) op.IsActive = false;
 
             // Generate new QR Data (Guid is simple and secure enough for mapping)
@@ -77,7 +79,7 @@ namespace SchoolERP.Api.Controllers
 
             var gatePass = new TransportGatePass
             {
-                StudentId = studentId,
+                StudentId = student.Id,
                 RouteId = routeId,
                 VehicleId = vehicleId,
                 QRCodeData = qrCodeData,
