@@ -30,6 +30,10 @@ namespace SchoolERP.Api.Data
         public DbSet<BookIssue> BookIssues { get; set; }
         public DbSet<Vehicle> Vehicles { get; set; }
         public DbSet<TransportRoute> TransportRoutes { get; set; }
+        public DbSet<TransportRouteStop> TransportRouteStops { get; set; }
+        public DbSet<TransportGatePass> TransportGatePasses { get; set; }
+        public DbSet<TransportAttendance> TransportAttendances { get; set; }
+        public DbSet<DriverLocation> DriverLocations { get; set; }
         public DbSet<Notice> Notices { get; set; }
         public DbSet<AdmissionInquiry> AdmissionInquiries { get; set; }
         public DbSet<Notification> Notifications { get; set; }
@@ -50,7 +54,68 @@ namespace SchoolERP.Api.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            
+
+            // Phase 7: Transport Management - Prevent Cascade Delete Cycles
+            builder.Entity<Vehicle>()
+                .HasOne(v => v.Driver)
+                .WithMany()
+                .HasForeignKey(v => v.DriverEmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Vehicle>()
+                .HasOne(v => v.Attendant)
+                .WithMany()
+                .HasForeignKey(v => v.AttendantEmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Vehicle>()
+                .HasOne(v => v.AssignedRoute)
+                .WithMany()
+                .HasForeignKey(v => v.AssignedRouteId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<TransportGatePass>()
+                .HasOne(t => t.Student)
+                .WithMany()
+                .HasForeignKey(t => t.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<TransportGatePass>()
+                .HasOne(t => t.Route)
+                .WithMany()
+                .HasForeignKey(t => t.RouteId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<TransportGatePass>()
+                .HasOne(t => t.Vehicle)
+                .WithMany()
+                .HasForeignKey(t => t.VehicleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<TransportAttendance>()
+                .HasOne(ta => ta.Student)
+                .WithMany()
+                .HasForeignKey(ta => ta.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<TransportAttendance>()
+                .HasOne(ta => ta.ScannedByEmployee)
+                .WithMany()
+                .HasForeignKey(ta => ta.ScannedByEmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<DriverLocation>()
+                .HasOne(dl => dl.Vehicle)
+                .WithMany()
+                .HasForeignKey(dl => dl.VehicleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<DriverLocation>()
+                .HasOne(dl => dl.DriverEmployee)
+                .WithMany()
+                .HasForeignKey(dl => dl.DriverEmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // Phase 6: Commission Management - Prevent Cascade Delete Cycles
             builder.Entity<TeacherCommission>()
                 .HasOne(tc => tc.Employee)

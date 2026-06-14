@@ -36,6 +36,11 @@ namespace SchoolERP.Api.Models
         public string PreviousSchool { get; set; } = string.Empty;
         
         public bool TransportRequired { get; set; }
+        
+        // Transport Assignment
+        public int? TransportRouteStopId { get; set; }
+        public TransportRouteStop? TransportRouteStop { get; set; }
+
         public DateTime AdmissionDate { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
 
         // TC tracking

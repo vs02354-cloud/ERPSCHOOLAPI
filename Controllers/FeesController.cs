@@ -141,9 +141,21 @@ namespace SchoolERP.Api.Controllers
 
             if (feeStruct != null)
             {
-                if (payment.IncludesTransportFee)
+                if (payment.IncludesTransportFee && student.TransportRequired)
                 {
-                    payment.TransportFeeAmount = feeStruct.TransportFee;
+                    decimal transportCost = feeStruct.TransportFee; // Base fee from structure
+                    
+                    // Add specific route/stop fare if applicable
+                    if (student.TransportRouteStopId.HasValue)
+                    {
+                        var stop = await _context.TransportRouteStops.Include(s => s.Route).FirstOrDefaultAsync(s => s.Id == student.TransportRouteStopId);
+                        if (stop != null)
+                        {
+                            transportCost += stop.StopFare > 0 ? stop.StopFare : (stop.Route?.RouteFare ?? 0);
+                        }
+                    }
+
+                    payment.TransportFeeAmount = transportCost;
                 }
                 else
                 {
