@@ -35,6 +35,8 @@ namespace SchoolERP.Api.Models
         public DateTime? JoiningDate { get; set; }
         public decimal? ExperienceYears { get; set; }
         public string? Qualification { get; set; }
+        public string? DrivingLicenceNumber { get; set; }
+        public DateTime? LicenceExpiryDate { get; set; }
 
         // Salary Information
         public decimal? BasicSalary { get; set; }
