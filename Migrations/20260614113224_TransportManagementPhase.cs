@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,13 +11,15 @@ namespace SchoolERP.Api.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_TransportRoutes_Vehicles_VehicleId",
-                table: "TransportRoutes");
+            migrationBuilder.Sql(@"
+                IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_TransportRoutes_Vehicles_VehicleId]') AND parent_object_id = OBJECT_ID(N'[dbo].[TransportRoutes]'))
+                    ALTER TABLE [dbo].[TransportRoutes] DROP CONSTRAINT [FK_TransportRoutes_Vehicles_VehicleId];
+            ");
 
-            migrationBuilder.DropIndex(
-                name: "IX_TransportRoutes_VehicleId",
-                table: "TransportRoutes");
+            migrationBuilder.Sql(@"
+                IF EXISTS (SELECT * FROM sys.indexes WHERE name = N'IX_TransportRoutes_VehicleId' AND object_id = OBJECT_ID(N'[dbo].[TransportRoutes]'))
+                    DROP INDEX [IX_TransportRoutes_VehicleId] ON [dbo].[TransportRoutes];
+            ");
 
             migrationBuilder.DropColumn(
                 name: "VehicleId",
