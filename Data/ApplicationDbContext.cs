@@ -70,7 +70,7 @@ namespace SchoolERP.Api.Data
 
             builder.Entity<Vehicle>()
                 .HasOne(v => v.AssignedRoute)
-                .WithMany()
+                .WithMany(r => r.Vehicles)
                 .HasForeignKey(v => v.AssignedRouteId)
                 .OnDelete(DeleteBehavior.Restrict);
 
