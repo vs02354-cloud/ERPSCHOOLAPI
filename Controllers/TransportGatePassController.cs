@@ -114,5 +114,18 @@ namespace SchoolERP.Api.Controllers
                 RouteName = pass.Route!.RouteName
             });
         }
+
+        [HttpPut("revoke/{id}")]
+        [Authorize(Roles = "Admin,Super Admin,School Admin,Transport Manager")]
+        public async Task<IActionResult> RevokeGatePass(int id)
+        {
+            var pass = await _context.TransportGatePasses.FindAsync(id);
+            if (pass == null) return NotFound("Gate Pass not found");
+
+            pass.IsActive = false;
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }
