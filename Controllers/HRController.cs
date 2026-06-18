@@ -60,7 +60,7 @@ namespace SchoolERP.Api.Controllers
                 var dto = new EmployeeDto { Employee = emp, IsActive = false };
                 if (!string.IsNullOrEmpty(emp.Username))
                 {
-                    var user = await _userManager.FindByNameAsync(emp.Username);
+                    var user = await _userManager.FindByEmailAsync(emp.Username) ?? await _userManager.FindByNameAsync(emp.Username);
                     if (user != null)
                     {
                         dto.IsActive = user.IsActive;
@@ -97,7 +97,7 @@ namespace SchoolERP.Api.Controllers
             var dto = new EmployeeDto { Employee = record, IsActive = false };
             if (!string.IsNullOrEmpty(record.Username))
             {
-                var user = await _userManager.FindByNameAsync(record.Username);
+                var user = await _userManager.FindByEmailAsync(record.Username) ?? await _userManager.FindByNameAsync(record.Username);
                 if (user != null)
                 {
                     dto.IsActive = user.IsActive;
