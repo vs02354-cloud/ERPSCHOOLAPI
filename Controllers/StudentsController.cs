@@ -103,6 +103,26 @@ namespace SchoolERP.Api.Controllers
             return NoContent();
         }
 
+        public class TransportStatusDto
+        {
+            public bool TransportRequired { get; set; }
+            public int? TransportRouteStopId { get; set; }
+        }
+
+        [HttpPut("{id}/transport-status")]
+        [Authorize(Roles = "Admin,Super Admin,School Admin,Transport Manager")]
+        public async Task<IActionResult> UpdateTransportStatus(int id, [FromBody] TransportStatusDto dto)
+        {
+            var student = await _context.Students.FindAsync(id);
+            if (student == null) return NotFound();
+
+            student.TransportRequired = dto.TransportRequired;
+            student.TransportRouteStopId = dto.TransportRouteStopId;
+
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
         private bool StudentExists(int id)
         {
             return _context.Students.Any(e => e.Id == id);

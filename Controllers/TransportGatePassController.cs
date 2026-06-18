@@ -35,15 +35,20 @@ namespace SchoolERP.Api.Controllers
         public async Task<ActionResult<IEnumerable<TransportGatePass>>> GetMyGatePasses()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var student = await _context.Students.FirstOrDefaultAsync(s => s.ApplicationUserId == userId);
+            var userName = User.Identity?.Name;
+
+            var students = await _context.Students
+                .Where(s => s.ApplicationUserId == userId || s.ParentUserId == userId || s.ParentContactNumber == userName)
+                .Select(s => s.Id)
+                .ToListAsync();
             
-            if (student == null) return NotFound("Student not found");
+            if (!students.Any()) return NotFound("Student not found");
 
             var gatePasses = await _context.TransportGatePasses
                 .Include(g => g.Route)
                 .Include(g => g.Vehicle)
                 .Include(g => g.Student)
-                .Where(g => g.StudentId == student.Id)
+                .Where(g => students.Contains(g.StudentId))
                 .OrderByDescending(g => g.CreatedDate)
                 .ToListAsync();
 
@@ -53,15 +58,23 @@ namespace SchoolERP.Api.Controllers
         public class RemarksDto { public string Remarks { get; set; } = string.Empty; }
 
         [HttpPost("request")]
-        public async Task<ActionResult<TransportGatePass>> RequestGatePass()
+        public async Task<ActionResult<TransportGatePass>> RequestGatePass([FromQuery] int? studentId = null)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var student = await _context.Students.Include(s => s.TransportRouteStop)
-                .FirstOrDefaultAsync(s => s.ApplicationUserId == userId);
+            var userName = User.Identity?.Name;
             
-            if (student == null || !student.TransportRequired || student.TransportRouteStopId == null)
+            var studentQuery = _context.Students.Include(s => s.TransportRouteStop)
+                .Where(s => s.ApplicationUserId == userId || s.ParentUserId == userId || s.ParentContactNumber == userName);
+                
+            var student = studentId.HasValue 
+                ? await studentQuery.FirstOrDefaultAsync(s => s.Id == studentId.Value)
+                : await studentQuery.FirstOrDefaultAsync();
+            
+            if (student == null) return NotFound("Student not found");
+            
+            if (!student.TransportRequired || student.TransportRouteStopId == null)
             {
-                return BadRequest("Student is not enrolled in transport");
+                return BadRequest("Transport facility is not enabled for this student.");
             }
 
             var routeId = student.TransportRouteStop!.RouteId;
