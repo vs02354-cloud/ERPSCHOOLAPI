@@ -4,6 +4,15 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SchoolERP.Api.Models
 {
+    public enum GatePassStatus
+    {
+        Pending,
+        Approved,
+        Rejected,
+        Used,
+        Expired
+    }
+
     public class TransportGatePass
     {
         [Key]
@@ -26,5 +35,19 @@ namespace SchoolERP.Api.Models
         public bool IsActive { get; set; } = true;
         
         public DateTime IssueDate { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
+
+        public GatePassStatus Status { get; set; } = GatePassStatus.Approved; // Default to Approved to not break existing ones before migration
+        
+        public string CreatedBy { get; set; } = "Admin";
+        
+        public DateTime CreatedDate { get; set; } = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
+        
+        public string? ApprovedBy { get; set; }
+        
+        public DateTime? ApprovalDate { get; set; }
+        
+        public string? Remarks { get; set; }
+        
+        public int? ValidityPeriodDays { get; set; }
     }
 }
