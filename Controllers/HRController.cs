@@ -128,12 +128,27 @@ namespace SchoolERP.Api.Controllers
             // Update Identity User IsActive status
             if (!string.IsNullOrEmpty(existing.Username))
             {
-                var user = await _userManager.FindByNameAsync(existing.Username);
-                if (user != null && user.IsActive != dto.IsActive)
+                var user = await _userManager.FindByEmailAsync(existing.Username) ?? await _userManager.FindByNameAsync(existing.Username);
+                if (user != null)
                 {
-                    user.IsActive = dto.IsActive;
-                    await _userManager.UpdateAsync(user);
+                    if (user.IsActive != dto.IsActive)
+                    {
+                        user.IsActive = dto.IsActive;
+                        var result = await _userManager.UpdateAsync(user);
+                        if (!result.Succeeded)
+                        {
+                            return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "Failed to update user status.", Errors = result.Errors });
+                        }
+                    }
                 }
+                else
+                {
+                    return BadRequest(new { Message = "User account linked to this employee was not found." });
+                }
+            }
+            else if (dto.IsActive)
+            {
+                return BadRequest(new { Message = "Cannot activate employee: No user account is linked to this employee." });
             }
 
             return NoContent();
