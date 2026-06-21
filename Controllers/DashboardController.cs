@@ -22,8 +22,8 @@ namespace SchoolERP.Api.Controllers
         public async Task<ActionResult<IEnumerable<object>>> GetActivityTrends()
         {
             var today = Utils.TimeUtils.GetIstTime();
-            var sixMonthsAgo = today.AddMonths(-5);
-            var startDate = new DateTime(sixMonthsAgo.Year, sixMonthsAgo.Month, 1);
+            var twelveMonthsAgo = today.AddMonths(-11);
+            var startDate = new DateTime(twelveMonthsAgo.Year, twelveMonthsAgo.Month, 1);
 
             // Fetch data
             var admissions = await _context.Students
@@ -40,7 +40,7 @@ namespace SchoolERP.Api.Controllers
 
             var trends = new List<object>();
 
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 12; i++)
             {
                 var targetMonth = startDate.AddMonths(i);
                 

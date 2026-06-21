@@ -322,7 +322,7 @@ namespace SchoolERP.Api.Controllers
             var payments = await _context.FeePayments.ToListAsync();
             var attendances = await _context.Attendances.ToListAsync();
             
-            for (int i = 5; i >= 0; i--)
+            for (int i = 11; i >= 0; i--)
             {
                 var targetDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime().AddMonths(-i);
                 
