@@ -96,44 +96,70 @@ namespace SchoolERP.Api.Controllers
                 return BadRequest("Only Students and Parents can apply for leaves.");
             }
 
-            leaveRequest.Status = "approve"; // As per requirement
+            leaveRequest.Status = "Pending"; // Wait for admin approval
             
             _context.LeaveRequests.Add(leaveRequest);
             await _context.SaveChangesAsync();
 
-            // Auto-mark attendance as "On Leave" for the requested dates
-            if (leaveRequest.StudentId.HasValue && leaveRequest.StudentId.Value > 0)
+            return CreatedAtAction(nameof(GetMyLeaves), new { id = leaveRequest.Id }, leaveRequest);
+        }
+
+        [HttpPut("{id}/Status")]
+        [Authorize(Roles = "Admin,Super Admin,School Admin,Principal")]
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] LeaveRequest updateRequest)
+        {
+            var leaveRequest = await _context.LeaveRequests.FindAsync(id);
+            if (leaveRequest == null) return NotFound();
+
+            if (leaveRequest.Status == "approve") 
             {
-                var studentId = leaveRequest.StudentId.Value;
-                var currDate = leaveRequest.StartDate.Date;
-                var endDate = leaveRequest.EndDate.Date;
-
-                while (currDate <= endDate)
-                {
-                    var existingAttendance = await _context.Attendances
-                        .FirstOrDefaultAsync(a => a.StudentId == studentId && a.Date.Date == currDate);
-
-                    if (existingAttendance != null)
-                    {
-                        existingAttendance.Status = "On Leave";
-                        existingAttendance.Remarks = "Leave Approved";
-                    }
-                    else
-                    {
-                        _context.Attendances.Add(new Attendance
-                        {
-                            StudentId = studentId,
-                            Date = currDate,
-                            Status = "On Leave",
-                            Remarks = "Leave Approved"
-                        });
-                    }
-                    currDate = currDate.AddDays(1);
-                }
-                await _context.SaveChangesAsync();
+                return BadRequest("Leave request is already approved.");
             }
 
-            return CreatedAtAction(nameof(GetMyLeaves), new { id = leaveRequest.Id }, leaveRequest);
+            if (leaveRequest.Status == "cancelled")
+            {
+                return BadRequest("Cannot update a cancelled leave request.");
+            }
+
+            leaveRequest.Status = updateRequest.Status;
+            leaveRequest.ManagerRemarks = updateRequest.ManagerRemarks ?? leaveRequest.ManagerRemarks;
+
+            if (updateRequest.Status == "approve")
+            {
+                // Auto-mark attendance as "On Leave" for the requested dates
+                if (leaveRequest.StudentId.HasValue && leaveRequest.StudentId.Value > 0)
+                {
+                    var studentId = leaveRequest.StudentId.Value;
+                    var currDate = leaveRequest.StartDate.Date;
+                    var endDate = leaveRequest.EndDate.Date;
+
+                    while (currDate <= endDate)
+                    {
+                        var existingAttendance = await _context.Attendances
+                            .FirstOrDefaultAsync(a => a.StudentId == studentId && a.Date.Date == currDate);
+
+                        if (existingAttendance != null)
+                        {
+                            existingAttendance.Status = "On Leave";
+                            existingAttendance.Remarks = "Leave Approved";
+                        }
+                        else
+                        {
+                            _context.Attendances.Add(new Attendance
+                            {
+                                StudentId = studentId,
+                                Date = currDate,
+                                Status = "On Leave",
+                                Remarks = "Leave Approved"
+                            });
+                        }
+                        currDate = currDate.AddDays(1);
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(leaveRequest);
         }
 
         [HttpPut("{id}/cancel")]

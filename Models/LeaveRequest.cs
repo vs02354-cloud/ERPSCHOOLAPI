@@ -16,7 +16,7 @@ namespace SchoolERP.Api.Models
         [Required]
         public string Reason { get; set; } = string.Empty;
 
-        public string Status { get; set; } = "approve"; // approve, Rejected
+        public string Status { get; set; } = "Pending"; // Pending, approve, Rejected
         public string ManagerRemarks { get; set; } = string.Empty;
     }
 }

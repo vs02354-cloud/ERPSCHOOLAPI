@@ -38,7 +38,7 @@ namespace SchoolERP.Api.Controllers
             // If parent or student is applying, verify they own the student record
             if (User.IsInRole("Parent") || User.IsInRole("Student"))
             {
-                if (student.ParentContactNumber != User.Identity?.Name && student.Email != User.Identity?.Name)
+                if (student.ParentContactNumber != User.Identity?.Name)
                 {
                     return Forbid();
                 }
