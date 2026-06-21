@@ -60,7 +60,7 @@ namespace SchoolERP.Api.Controllers
                 var dto = new EmployeeDto { Employee = emp, IsActive = false };
                 if (!string.IsNullOrEmpty(emp.Username))
                 {
-                    var user = await _userManager.FindByEmailAsync(emp.Username) ?? await _userManager.FindByNameAsync(emp.Username);
+                    var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Email == emp.Username || u.UserName == emp.Username);
                     if (user != null)
                     {
                         dto.IsActive = user.IsActive;
@@ -97,7 +97,7 @@ namespace SchoolERP.Api.Controllers
             var dto = new EmployeeDto { Employee = record, IsActive = false };
             if (!string.IsNullOrEmpty(record.Username))
             {
-                var user = await _userManager.FindByEmailAsync(record.Username) ?? await _userManager.FindByNameAsync(record.Username);
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Email == record.Username || u.UserName == record.Username);
                 if (user != null)
                 {
                     dto.IsActive = user.IsActive;
@@ -128,7 +128,7 @@ namespace SchoolERP.Api.Controllers
             // Update Identity User IsActive status
             if (!string.IsNullOrEmpty(existing.Username))
             {
-                var user = await _userManager.FindByEmailAsync(existing.Username) ?? await _userManager.FindByNameAsync(existing.Username);
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Email == existing.Username || u.UserName == existing.Username);
                 if (user != null)
                 {
                     if (user.IsActive != dto.IsActive)
