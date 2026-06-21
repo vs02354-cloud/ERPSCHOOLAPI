@@ -27,6 +27,7 @@ namespace SchoolERP.Api.Controllers
                 .Include(g => g.Student)
                 .Include(g => g.Route)
                 .Include(g => g.Vehicle)
+                    .ThenInclude(v => v.Driver)
                 .OrderByDescending(g => g.CreatedDate)
                 .ToListAsync();
         }
@@ -47,6 +48,7 @@ namespace SchoolERP.Api.Controllers
             var gatePasses = await _context.TransportGatePasses
                 .Include(g => g.Route)
                 .Include(g => g.Vehicle)
+                    .ThenInclude(v => v.Driver)
                 .Include(g => g.Student)
                 .Where(g => students.Contains(g.StudentId))
                 .OrderByDescending(g => g.CreatedDate)
