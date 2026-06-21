@@ -28,15 +28,78 @@ namespace SchoolERP.Api.Controllers
                 return BadRequest("Message cannot be empty.");
             }
 
-            // Fetch valid parent contact numbers based on target audience
-            var studentsQuery = _context.Students.Where(s => !string.IsNullOrEmpty(s.ParentContactNumber));
+            var studentsQuery = _context.Students.AsQueryable();
 
             if (request.TargetAudience == "SpecificClass" && !string.IsNullOrEmpty(request.TargetClass))
             {
                 studentsQuery = studentsQuery.Where(s => s.CurrentClass == request.TargetClass);
             }
 
+            if (request.Type == "Email")
+            {
+                var studentsWithEmail = await studentsQuery
+                    .Where(s => !string.IsNullOrEmpty(s.ParentEmail))
+                    .ToListAsync();
+
+                if (!studentsWithEmail.Any())
+                {
+                    return Ok(new { Count = 0, Status = "No parent emails found." });
+                }
+
+                int successCount = 0;
+                using var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Add("api-key", "2eda1daebde8346a5b8b037ebcf5c41c");
+                httpClient.DefaultRequestHeaders.Add("accept", "application/json");
+
+                foreach (var student in studentsWithEmail)
+                {
+                    var log = new EmailDeliveryLog
+                    {
+                        StudentId = student.Id,
+                        EmailAddress = student.ParentEmail,
+                        MessageContent = request.Message,
+                        Status = "Pending"
+                    };
+
+                    try
+                    {
+                        var payload = new
+                        {
+                            sender = new { name = "School Admin", email = "admin@free.erpschool.com" },
+                            to = new[] { new { email = student.ParentEmail, name = student.FatherName } },
+                            subject = "School Broadcast Message",
+                            htmlContent = $"<p>Dear Parent,</p><p>{request.Message}</p>"
+                        };
+
+                        var response = await httpClient.PostAsJsonAsync("https://api.brevo.com/v3/smtp/email", payload);
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            log.Status = "Delivered";
+                            successCount++;
+                        }
+                        else
+                        {
+                            log.Status = "Failed";
+                            log.ErrorMessage = await response.Content.ReadAsStringAsync();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Status = "Failed";
+                        log.ErrorMessage = ex.Message;
+                    }
+
+                    _context.EmailDeliveryLogs.Add(log);
+                }
+
+                await _context.SaveChangesAsync();
+                return Ok(new { Count = successCount, Status = "Success" });
+            }
+
+            // Fallback for SMS/WhatsApp
             var numbers = await studentsQuery
+                .Where(s => !string.IsNullOrEmpty(s.ParentContactNumber))
                 .Select(s => s.ParentContactNumber)
                 .Distinct()
                 .ToListAsync();
@@ -46,15 +109,8 @@ namespace SchoolERP.Api.Controllers
                 return Ok(new { Count = 0, Status = "No parent numbers found." });
             }
 
-            // SIMULATED: In a real environment, you would loop through 'numbers' 
-            // and send the request.Message via Twilio (SMS or WhatsApp API).
-            
-            // Example Twilio snippet:
-            // foreach(var num in numbers) {
-            //    MessageResource.Create(body: request.Message, from: new Twilio.Types.PhoneNumber("+1234567890"), to: new Twilio.Types.PhoneNumber(num));
-            // }
+            // SIMULATED: SMS/WhatsApp delivery logic here...
 
-            // We'll log the simulated count and return success.
             return Ok(new { Count = numbers.Count, Status = "Success" });
         }
 

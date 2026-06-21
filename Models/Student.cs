@@ -28,6 +28,7 @@ namespace SchoolERP.Api.Models
         public string FatherName { get; set; } = string.Empty;
         public string MotherName { get; set; } = string.Empty;
         public string ParentContactNumber { get; set; } = string.Empty;
+        public string ParentEmail { get; set; } = string.Empty;
         public string Address { get; set; } = string.Empty;
 
         // Academic Details
