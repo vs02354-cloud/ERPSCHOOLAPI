@@ -105,6 +105,12 @@ namespace SchoolERP.Api.Controllers
             };
 
             _context.TransportGatePasses.Add(gatePass);
+            _context.SystemActivities.Add(new SystemActivity
+            {
+                Text = $"Gate pass requested for {student.FirstName} {student.LastName}.",
+                ActivityType = "GatePass",
+                UserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            });
             await _context.SaveChangesAsync();
 
             return Ok(gatePass);
@@ -156,6 +162,12 @@ namespace SchoolERP.Api.Controllers
             };
 
             _context.TransportGatePasses.Add(gatePass);
+            _context.SystemActivities.Add(new SystemActivity
+            {
+                Text = $"Gate pass generated for {student.FirstName} {student.LastName}.",
+                ActivityType = "GatePass",
+                UserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            });
             await _context.SaveChangesAsync();
 
             return Ok(gatePass);

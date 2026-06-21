@@ -46,6 +46,9 @@ namespace SchoolERP.Api.Data
         public DbSet<CommissionSetting> CommissionSettings { get; set; }
         public DbSet<TeacherCommission> TeacherCommissions { get; set; }
 
+        // Phase 8: System Activity
+        public DbSet<SystemActivity> SystemActivities { get; set; }
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SchoolERP.Api.Data;
 using SchoolERP.Api.Models;
+using System.Security.Claims;
 
 namespace SchoolERP.Api.Controllers
 {
@@ -221,6 +222,14 @@ namespace SchoolERP.Api.Controllers
                     }
                 }
             }
+
+            _context.SystemActivities.Add(new SystemActivity
+            {
+                Text = $"Fee payment of ₹{payment.AmountPaid} received from {student.FirstName} {student.LastName}.",
+                ActivityType = "Payment",
+                UserId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier)
+            });
+            await _context.SaveChangesAsync();
 
             return Ok(payment);
         }

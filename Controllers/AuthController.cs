@@ -147,6 +147,17 @@ namespace SchoolERP.Api.Controllers
 
                 var token = GetToken(authClaims);
 
+                if (user.UserType == "Teacher")
+                {
+                    _context.SystemActivities.Add(new SystemActivity
+                    {
+                        Text = $"Teacher {user.FirstName} {user.LastName} logged in.",
+                        ActivityType = "Login",
+                        UserId = user.Id
+                    });
+                    await _context.SaveChangesAsync();
+                }
+
                 return Ok(new AuthResponseDto
                 {
                     Token = new JwtSecurityTokenHandler().WriteToken(token),
