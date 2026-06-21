@@ -48,7 +48,7 @@ namespace SchoolERP.Api.Controllers
 
                 int successCount = 0;
                 using var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Add("api-key", "2eda1daebde8346a5b8b037ebcf5c41c");
+                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "re_BBytkH56_9sG1XQEbzA5XEWxq5191HGRv");
                 httpClient.DefaultRequestHeaders.Add("accept", "application/json");
 
                 foreach (var student in studentsWithEmail)
@@ -65,13 +65,13 @@ namespace SchoolERP.Api.Controllers
                     {
                         var payload = new
                         {
-                            sender = new { name = "School Admin", email = "admin@free.erpschool.com" },
-                            to = new[] { new { email = student.ParentEmail, name = student.FatherName } },
+                            from = "School Admin <onboarding@resend.dev>",
+                            to = new[] { student.ParentEmail },
                             subject = "School Broadcast Message",
-                            htmlContent = $"<p>Dear Parent,</p><p>{request.Message}</p>"
+                            html = $"<p>Dear Parent,</p><p>{request.Message}</p>"
                         };
 
-                        var response = await httpClient.PostAsJsonAsync("https://api.brevo.com/v3/smtp/email", payload);
+                        var response = await httpClient.PostAsJsonAsync("https://api.resend.com/emails", payload);
 
                         if (response.IsSuccessStatusCode)
                         {
