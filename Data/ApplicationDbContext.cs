@@ -50,6 +50,20 @@ namespace SchoolERP.Api.Data
         // Phase 8: System Activity
         public DbSet<SystemActivity> SystemActivities { get; set; }
 
+        // Phase 9: CMS / Dynamic Homepage
+        public DbSet<HomePageSettings> HomePageSettings { get; set; }
+        public DbSet<QuickLink> QuickLinks { get; set; }
+        public DbSet<SocialMediaLink> SocialMediaLinks { get; set; }
+        public DbSet<UpcomingEvent> UpcomingEvents { get; set; }
+        public DbSet<RecentActivity> RecentActivities { get; set; }
+        public DbSet<FacultyExcellence> FacultyExcellences { get; set; }
+        public DbSet<StudentSpotlight> StudentSpotlights { get; set; }
+        public DbSet<HomeStatistic> HomeStatistics { get; set; }
+        public DbSet<NewsTicker> NewsTickers { get; set; }
+        public DbSet<PortalCard> PortalCards { get; set; }
+        public DbSet<ImageGallery> ImageGalleries { get; set; }
+        public DbSet<CmsAuditLog> CmsAuditLogs { get; set; }
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {

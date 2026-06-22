@@ -13,10 +13,12 @@ namespace SchoolERP.Api.Controllers
     public class CommunicationController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public CommunicationController(ApplicationDbContext context)
+        public CommunicationController(ApplicationDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         [HttpPost("Broadcast")]
@@ -47,9 +49,19 @@ namespace SchoolERP.Api.Controllers
                 }
 
                 int successCount = 0;
-                using var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "re_BBytkH56_9sG1XQEbzA5XEWxq5191HGRv");
-                httpClient.DefaultRequestHeaders.Add("accept", "application/json");
+                var emailSettings = _configuration.GetSection("EmailSettings");
+                string smtpServer = emailSettings["SmtpServer"] ?? "smtp.gmail.com";
+                int smtpPort = int.Parse(emailSettings["SmtpPort"] ?? "587");
+                string senderEmail = emailSettings["SenderEmail"] ?? "your-email@gmail.com";
+                string senderName = emailSettings["SenderName"] ?? "School Admin";
+                string smtpUsername = emailSettings["Username"] ?? "";
+                string smtpPassword = emailSettings["Password"] ?? "";
+
+                using var smtpClient = new System.Net.Mail.SmtpClient(smtpServer, smtpPort)
+                {
+                    Credentials = new System.Net.NetworkCredential(smtpUsername, smtpPassword),
+                    EnableSsl = true
+                };
 
                 foreach (var student in studentsWithEmail)
                 {
@@ -63,26 +75,19 @@ namespace SchoolERP.Api.Controllers
 
                     try
                     {
-                        var payload = new
+                        var mailMessage = new System.Net.Mail.MailMessage
                         {
-                            from = "School Admin <onboarding@resend.dev>",
-                            to = new[] { student.ParentEmail },
-                            subject = "School Broadcast Message",
-                            html = $"<p>Dear Parent,</p><p>{request.Message}</p>"
+                            From = new System.Net.Mail.MailAddress(senderEmail, senderName),
+                            Subject = "School Broadcast Message",
+                            Body = $"<p>Dear Parent,</p><p>{request.Message}</p>",
+                            IsBodyHtml = true
                         };
+                        mailMessage.To.Add(student.ParentEmail);
 
-                        var response = await httpClient.PostAsJsonAsync("https://api.resend.com/emails", payload);
+                        await smtpClient.SendMailAsync(mailMessage);
 
-                        if (response.IsSuccessStatusCode)
-                        {
-                            log.Status = "Delivered";
-                            successCount++;
-                        }
-                        else
-                        {
-                            log.Status = "Failed";
-                            log.ErrorMessage = await response.Content.ReadAsStringAsync();
-                        }
+                        log.Status = "Delivered";
+                        successCount++;
                     }
                     catch (Exception ex)
                     {
