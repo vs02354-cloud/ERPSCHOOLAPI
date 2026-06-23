@@ -92,6 +92,13 @@ namespace SchoolERP.Api.Controllers
             existing.HeroSecondaryButtonUrl = updatedSettings.HeroSecondaryButtonUrl;
             existing.MapEmbedUrl = updatedSettings.MapEmbedUrl;
 
+            // Principal Message
+            existing.PrincipalName = updatedSettings.PrincipalName;
+            existing.PrincipalTitle = updatedSettings.PrincipalTitle;
+            existing.PrincipalCredentials = updatedSettings.PrincipalCredentials;
+            existing.PrincipalMessage = updatedSettings.PrincipalMessage;
+            existing.PrincipalImageUrl = updatedSettings.PrincipalImageUrl;
+
             await _context.SaveChangesAsync();
             await LogAction("Update", "Settings", oldValues, existing);
             return NoContent();

@@ -26,6 +26,13 @@ namespace SchoolERP.Api.Models
 
         // Location Map
         public string MapEmbedUrl { get; set; } = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3679.529517170564!2d75.82025687590827!3d22.745700779368367!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3962fd02e2124cb1%3A0x67db238d212133b3!2sSuper%20Corridor%2C%20Indore%2C%20Madhya%20Pradesh!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin";
+
+        // Principal Message
+        public string PrincipalName { get; set; } = "Dr. Sarah Jenkins";
+        public string PrincipalTitle { get; set; } = "School Principal";
+        public string PrincipalCredentials { get; set; } = "Ph.D. in Education Administration, Harvard University";
+        public string PrincipalMessage { get; set; } = "Welcome to EduSchool, a place where we believe that education is not preparation for life, but is life itself. It is my absolute honor to lead this outstanding institution.";
+        public string PrincipalImageUrl { get; set; } = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=600&auto=format&fit=crop";
     }
 
     public class QuickLink
