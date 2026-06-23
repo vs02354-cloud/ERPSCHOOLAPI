@@ -63,6 +63,7 @@ namespace SchoolERP.Api.Data
         public DbSet<PortalCard> PortalCards { get; set; }
         public DbSet<ImageGallery> ImageGalleries { get; set; }
         public DbSet<CmsAuditLog> CmsAuditLogs { get; set; }
+        public DbSet<Holiday> Holidays { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)

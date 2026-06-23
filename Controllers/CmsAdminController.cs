@@ -373,6 +373,41 @@ namespace SchoolERP.Api.Controllers
             return NoContent();
         }
 
+        // --- Holidays ---
+        [HttpGet("Holidays")]
+        public async Task<ActionResult<IEnumerable<Holiday>>> GetHolidays() => await _context.Holidays.OrderBy(x => x.Date).ToListAsync();
+
+        [HttpPost("Holidays")]
+        public async Task<ActionResult<Holiday>> AddHoliday(Holiday item)
+        {
+            _context.Holidays.Add(item);
+            await _context.SaveChangesAsync();
+            await LogAction("Add", "Holidays", null, item);
+            return CreatedAtAction(nameof(GetHolidays), new { id = item.Id }, item);
+        }
+
+        [HttpPut("Holidays/{id}")]
+        public async Task<IActionResult> UpdateHoliday(int id, Holiday item)
+        {
+            if (id != item.Id) return BadRequest();
+            var existing = await _context.Holidays.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+            _context.Entry(item).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            await LogAction("Update", "Holidays", existing, item);
+            return NoContent();
+        }
+
+        [HttpDelete("Holidays/{id}")]
+        public async Task<IActionResult> DeleteHoliday(int id)
+        {
+            var item = await _context.Holidays.FindAsync(id);
+            if (item == null) return NotFound();
+            _context.Holidays.Remove(item);
+            await _context.SaveChangesAsync();
+            await LogAction("Delete", "Holidays", item, null);
+            return NoContent();
+        }
+
         // --- Audit Logs ---
         [HttpGet("Logs")]
         public async Task<ActionResult<IEnumerable<CmsAuditLog>>> GetAuditLogs()

@@ -29,8 +29,9 @@ namespace SchoolERP.Api.Controllers
             var students = await _context.StudentSpotlights.Where(x => x.IsActive).OrderBy(x => x.DisplayOrder).ToListAsync();
             var stats = await _context.HomeStatistics.Where(x => x.IsActive).OrderBy(x => x.DisplayOrder).ToListAsync();
             var portals = await _context.PortalCards.Where(x => x.IsActive).OrderBy(x => x.DisplayOrder).ToListAsync();
-            var tickers = await _context.NewsTickers.Where(x => x.IsActive && x.StartDate <= now && x.ExpiryDate >= now).OrderByDescending(x => x.Priority).ToListAsync();
+            var tickers = await _context.NewsTickers.Where(x => x.IsActive && x.StartDate.Date <= now.Date && x.ExpiryDate.Date >= now.Date).OrderByDescending(x => x.Priority).ToListAsync();
             var gallery = await _context.ImageGalleries.OrderBy(x => x.DisplayOrder).ToListAsync();
+            var holidays = await _context.Holidays.Where(x => x.IsActive && x.Date >= now.Date).OrderBy(x => x.Date).ToListAsync();
 
             return Ok(new
             {
@@ -44,7 +45,8 @@ namespace SchoolERP.Api.Controllers
                 HomeStatistics = stats,
                 PortalCards = portals,
                 NewsTickers = tickers,
-                ImageGallery = gallery
+                ImageGallery = gallery,
+                Holidays = holidays
             });
         }
     }

@@ -164,4 +164,18 @@ namespace SchoolERP.Api.Models
         public string PreviousValue { get; set; } // JSON serialized
         public string NewValue { get; set; } // JSON serialized
     }
+
+    public class Holiday
+    {
+        [Key]
+        public int Id { get; set; }
+        [Required]
+        public string Title { get; set; }
+        [Required]
+        public DateTime Date { get; set; }
+        [Required]
+        public string Type { get; set; } // Public Holiday, Government Holiday, Optional Holiday
+        public string Description { get; set; }
+        public bool IsActive { get; set; } = true;
+    }
 }
