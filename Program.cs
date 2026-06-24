@@ -86,7 +86,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAngularDevClient",
         b =>
         {
-            b.WithOrigins("http://localhost:4200", "https://erpschoolui.onrender.com", "http://localhost", "capacitor://localhost")
+            b.AllowAnyOrigin()
              .AllowAnyHeader()
              .AllowAnyMethod();
         });
