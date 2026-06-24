@@ -14,11 +14,13 @@ namespace SchoolERP.Api.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
 
-        public CommunicationController(ApplicationDbContext context, IConfiguration configuration)
+        public CommunicationController(ApplicationDbContext context, IConfiguration configuration, IServiceScopeFactory serviceScopeFactory)
         {
             _context = context;
             _configuration = configuration;
+            _serviceScopeFactory = serviceScopeFactory;
         }
 
         [HttpPost("Broadcast")]
@@ -48,58 +50,66 @@ namespace SchoolERP.Api.Controllers
                     return Ok(new { Count = 0, Status = "No parent emails found." });
                 }
 
-                int successCount = 0;
-                var emailSettings = _configuration.GetSection("EmailSettings");
-                string smtpServer = emailSettings["SmtpServer"] ?? "smtp.gmail.com";
-                int smtpPort = int.Parse(emailSettings["SmtpPort"] ?? "587");
-                string senderEmail = emailSettings["SenderEmail"] ?? "your-email@gmail.com";
-                string senderName = emailSettings["SenderName"] ?? "School Admin";
-                string smtpUsername = emailSettings["Username"] ?? "";
-                string smtpPassword = emailSettings["Password"] ?? "";
-
-                using var smtpClient = new System.Net.Mail.SmtpClient(smtpServer, smtpPort)
+                // Process in background to avoid long UI delays
+                var messageContent = request.Message;
+                _ = Task.Run(async () =>
                 {
-                    Credentials = new System.Net.NetworkCredential(smtpUsername, smtpPassword),
-                    EnableSsl = true
-                };
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-                foreach (var student in studentsWithEmail)
-                {
-                    var log = new EmailDeliveryLog
+                    var emailSettings = config.GetSection("EmailSettings");
+                    string smtpServer = emailSettings["SmtpServer"] ?? "smtp.gmail.com";
+                    int smtpPort = int.Parse(emailSettings["SmtpPort"] ?? "587");
+                    string senderEmail = emailSettings["SenderEmail"] ?? "your-email@gmail.com";
+                    string senderName = emailSettings["SenderName"] ?? "School Admin";
+                    string smtpUsername = emailSettings["Username"] ?? "";
+                    string smtpPassword = emailSettings["Password"] ?? "";
+
+                    using var smtpClient = new System.Net.Mail.SmtpClient(smtpServer, smtpPort)
                     {
-                        StudentId = student.Id,
-                        EmailAddress = student.ParentEmail,
-                        MessageContent = request.Message,
-                        Status = "Pending"
+                        Credentials = new System.Net.NetworkCredential(smtpUsername, smtpPassword),
+                        EnableSsl = true
                     };
 
-                    try
+                    foreach (var student in studentsWithEmail)
                     {
-                        var mailMessage = new System.Net.Mail.MailMessage
+                        var log = new EmailDeliveryLog
                         {
-                            From = new System.Net.Mail.MailAddress(senderEmail, senderName),
-                            Subject = "School Broadcast Message",
-                            Body = $"<p>Dear Parent,</p><p>{request.Message}</p>",
-                            IsBodyHtml = true
+                            StudentId = student.Id,
+                            EmailAddress = student.ParentEmail,
+                            MessageContent = messageContent,
+                            Status = "Pending"
                         };
-                        mailMessage.To.Add(student.ParentEmail);
 
-                        await smtpClient.SendMailAsync(mailMessage);
+                        try
+                        {
+                            var mailMessage = new System.Net.Mail.MailMessage
+                            {
+                                From = new System.Net.Mail.MailAddress(senderEmail, senderName),
+                                Subject = "School Broadcast Message",
+                                Body = $"<p>Dear Parent,</p><p>{messageContent}</p>",
+                                IsBodyHtml = true
+                            };
+                            mailMessage.To.Add(student.ParentEmail);
 
-                        log.Status = "Delivered";
-                        successCount++;
+                            await smtpClient.SendMailAsync(mailMessage);
+
+                            log.Status = "Delivered";
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Status = "Failed";
+                            log.ErrorMessage = ex.Message;
+                        }
+
+                        dbContext.EmailDeliveryLogs.Add(log);
                     }
-                    catch (Exception ex)
-                    {
-                        log.Status = "Failed";
-                        log.ErrorMessage = ex.Message;
-                    }
 
-                    _context.EmailDeliveryLogs.Add(log);
-                }
+                    await dbContext.SaveChangesAsync();
+                });
 
-                await _context.SaveChangesAsync();
-                return Ok(new { Count = successCount, Status = "Success" });
+                return Ok(new { Count = studentsWithEmail.Count, Status = "Success" });
             }
 
             // Fallback for SMS/WhatsApp
