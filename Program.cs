@@ -111,7 +111,12 @@ app.UseSwaggerUI(c =>
 
 app.UseDeveloperExceptionPage();
 
-app.UseHttpsRedirection();
+app.UseCors("AllowAngularDevClient");
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
 if (!Directory.Exists(uploadsPath))
@@ -123,8 +128,6 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = "/Uploads"
 });
-
-app.UseCors("AllowAngularDevClient");
 
 app.UseAuthentication();
 app.UseAuthorization();

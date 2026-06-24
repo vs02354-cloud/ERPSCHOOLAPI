@@ -41,7 +41,7 @@ namespace SchoolERP.Api.Controllers
         {
             if (file == null || file.Length == 0) return BadRequest("No file uploaded");
 
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "cms");
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "cms");
             if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
 
             var fileName = $"{Guid.NewGuid()}_{file.FileName}";
@@ -52,7 +52,7 @@ namespace SchoolERP.Api.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            return Ok(new { Url = $"/uploads/cms/{fileName}" });
+            return Ok(new { Url = $"/Uploads/cms/{fileName}" });
         }
 
         // --- HomePageSettings ---
