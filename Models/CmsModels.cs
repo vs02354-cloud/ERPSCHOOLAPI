@@ -13,6 +13,7 @@ namespace SchoolERP.Api.Models
         public string Address { get; set; } = "Super Corridor, Indore, Madhya Pradesh";
         public string Email { get; set; } = "info@eduschool.edu";
         public string Phone { get; set; } = "+1 (555) 123-4567";
+        public string MobileNumber { get; set; } = "+1 (555) 987-6543";
         public string WebsiteUrl { get; set; } = "https://www.eduschool.edu";
         
         // Hero Section

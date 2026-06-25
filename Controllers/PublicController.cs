@@ -33,6 +33,13 @@ namespace SchoolERP.Api.Controllers
             var gallery = await _context.ImageGalleries.OrderBy(x => x.DisplayOrder).ToListAsync();
             var holidays = await _context.Holidays.Where(x => x.IsActive && x.Date >= now.Date).OrderBy(x => x.Date).ToListAsync();
 
+            var totalStudents = await _context.Students.CountAsync(s => s.IsActive);
+            var totalTeachers = await _context.Employees.CountAsync(e => e.EmployeeType == "Teaching");
+            var todaysBirthdays = await _context.Students
+                .Where(s => s.IsActive && s.DateOfBirth.Month == now.Month && s.DateOfBirth.Day == now.Day)
+                .Select(s => new { Name = s.FirstName + " " + s.LastName, Class = s.CurrentClass + "-" + s.Section })
+                .ToListAsync();
+
             return Ok(new
             {
                 Settings = settings ?? new Models.HomePageSettings(),
@@ -46,7 +53,10 @@ namespace SchoolERP.Api.Controllers
                 PortalCards = portals,
                 NewsTickers = tickers,
                 ImageGallery = gallery,
-                Holidays = holidays
+                Holidays = holidays,
+                TotalStudents = totalStudents,
+                TotalTeachers = totalTeachers,
+                TodaysBirthdays = todaysBirthdays
             });
         }
     }
