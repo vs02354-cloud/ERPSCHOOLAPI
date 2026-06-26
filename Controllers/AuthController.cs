@@ -33,7 +33,7 @@ namespace SchoolERP.Api.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
-            var username = model.UserType == "Parent" ? model.MobileNumber : model.Email;
+            var username = model.MobileNumber;
             var email = model.UserType == "Parent" ? null : model.Email;
 
             ApplicationUser? userExists = null;
@@ -120,7 +120,7 @@ namespace SchoolERP.Api.Controllers
                         EmployeeCode = $"EMP{SchoolERP.Api.Utils.TimeUtils.GetIstTime().Year}{(count + 1):D4}",
                         FirstName = model.FirstName,
                         LastName = model.LastName,
-                        Username = model.Email,
+                        Username = model.MobileNumber,
                         Designation = model.UserType,
                         MobileNumber = model.MobileNumber
                     };
