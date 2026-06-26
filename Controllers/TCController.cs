@@ -108,6 +108,7 @@ namespace SchoolERP.Api.Controllers
             request.CreatedDate = SchoolERP.Api.Utils.TimeUtils.GetIstTime();
 
             // Save TC
+            request.Status = "Approved";
             _context.TransferCertificates.Add(request);
 
             // Hide student from active list
