@@ -215,11 +215,11 @@ namespace SchoolERP.Api.Controllers
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto model)
         {
-            var user = await _userManager.FindByEmailAsync(model.Email) ?? await _userManager.FindByNameAsync(model.Email);
-            if (user == null || string.IsNullOrEmpty(user.Email))
+            var user = await _userManager.FindByNameAsync(model.Username);
+            if (user == null || user.Email != model.Email || string.IsNullOrEmpty(user.Email))
             {
                 // Don't reveal that the user does not exist
-                return Ok(new { Status = "Success", Message = "If the email is registered, an OTP has been sent." });
+                return Ok(new { Status = "Success", Message = "If the details are correct, an OTP has been sent." });
             }
 
             // Generate 6-digit OTP
@@ -255,7 +255,7 @@ namespace SchoolERP.Api.Controllers
                 Console.WriteLine($"Error sending email: {ex.Message}");
             }
 
-            return Ok(new { Status = "Success", Message = "If the email is registered, an OTP has been sent." });
+            return Ok(new { Status = "Success", Message = "If the details are correct, an OTP has been sent." });
         }
 
         [HttpPost("reset-password")]
