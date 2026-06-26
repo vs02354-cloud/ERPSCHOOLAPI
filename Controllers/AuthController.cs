@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace SchoolERP.Api.Controllers
 {
@@ -18,13 +19,15 @@ namespace SchoolERP.Api.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
         private readonly Data.ApplicationDbContext _context;
+        private readonly IMemoryCache _cache;
 
-        public AuthController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, Data.ApplicationDbContext context)
+        public AuthController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, Data.ApplicationDbContext context, IMemoryCache cache)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _configuration = configuration;
             _context = context;
+            _cache = cache;
         }
 
         [HttpPost("register")]
@@ -207,6 +210,80 @@ namespace SchoolERP.Api.Controllers
                 user.CreatedAt,
                 user.IsActive
             });
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email) ?? await _userManager.FindByNameAsync(model.Email);
+            if (user == null || string.IsNullOrEmpty(user.Email))
+            {
+                // Don't reveal that the user does not exist
+                return Ok(new { Status = "Success", Message = "If the email is registered, an OTP has been sent." });
+            }
+
+            // Generate 6-digit OTP
+            var otp = new Random().Next(100000, 999999).ToString();
+
+            // Store in cache for 10 minutes
+            _cache.Set($"OTP_{user.Email}", otp, TimeSpan.FromMinutes(10));
+
+            // Send Email
+            try
+            {
+                string apiKey = "re_BBytkH56_9sG1XQEbzA5XEWxq5191HGRv";
+                string senderEmail = _configuration["EmailSettings:SenderEmail"] ?? "onboarding@resend.dev";
+                string senderName = _configuration["EmailSettings:SenderName"] ?? "School Admin";
+
+                using var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+
+                var payload = new
+                {
+                    from = $"{senderName} <{senderEmail}>",
+                    to = new[] { user.Email },
+                    subject = "Password Reset OTP",
+                    html = $"<p>Dear {user.FirstName},</p><p>Your password reset OTP is <strong>{otp}</strong>. It is valid for 10 minutes.</p>"
+                };
+
+                var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json");
+                await httpClient.PostAsync("https://api.resend.com/emails", content);
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                Console.WriteLine($"Error sending email: {ex.Message}");
+            }
+
+            return Ok(new { Status = "Success", Message = "If the email is registered, an OTP has been sent." });
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto model)
+        {
+            if (!_cache.TryGetValue($"OTP_{model.Email}", out string? cachedOtp) || cachedOtp != model.OTP)
+            {
+                return BadRequest(new { Status = "Error", Message = "Invalid or expired OTP." });
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Email) ?? await _userManager.FindByNameAsync(model.Email);
+            if (user == null)
+            {
+                return BadRequest(new { Status = "Error", Message = "Invalid request." });
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
+
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Status = "Error", Message = errors });
+            }
+
+            _cache.Remove($"OTP_{model.Email}");
+
+            return Ok(new { Status = "Success", Message = "Password has been reset successfully." });
         }
     }
 }
