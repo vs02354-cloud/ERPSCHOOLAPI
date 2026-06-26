@@ -19,6 +19,7 @@ namespace SchoolERP.Api.Data
 
         // Phase 3: Student Administration
         public DbSet<TransferCertificate> TransferCertificates { get; set; }
+        public DbSet<StudentPromotion> StudentPromotions { get; set; }
 
         // Phase 3: HR
         public DbSet<Employee> Employees { get; set; }
@@ -153,6 +154,13 @@ namespace SchoolERP.Api.Data
                 .WithMany()
                 .HasForeignKey(tc => tc.FeePaymentId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Phase 3: Student Administration
+            builder.Entity<StudentPromotion>()
+                .HasOne(sp => sp.Student)
+                .WithMany()
+                .HasForeignKey(sp => sp.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Customize the ASP.NET Identity model and override the defaults if needed.
             // For example, you can rename the ASP.NET Identity table names and more.
