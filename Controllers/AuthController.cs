@@ -266,8 +266,8 @@ namespace SchoolERP.Api.Controllers
                 return BadRequest(new { Status = "Error", Message = "Invalid or expired OTP." });
             }
 
-            var user = await _userManager.FindByEmailAsync(model.Email) ?? await _userManager.FindByNameAsync(model.Email);
-            if (user == null)
+            var user = await _userManager.FindByNameAsync(model.Username);
+            if (user == null || user.Email != model.Email)
             {
                 return BadRequest(new { Status = "Error", Message = "Invalid request." });
             }
@@ -280,6 +280,10 @@ namespace SchoolERP.Api.Controllers
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
                 return StatusCode(StatusCodes.Status500InternalServerError, new { Status = "Error", Message = errors });
             }
+
+            // Explicitly force save to ensure DB is updated
+            await _userManager.UpdateAsync(user);
+            await _context.SaveChangesAsync();
 
             _cache.Remove($"OTP_{model.Email}");
 
