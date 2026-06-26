@@ -49,6 +49,21 @@ namespace SchoolERP.Api.Controllers
             if (userExists != null)
                 return StatusCode(StatusCodes.Status500InternalServerError, new { Status = "Error", Message = "User already exists!" });
 
+            if (model.UserType == "Parent")
+            {
+                var hasStudent = _context.Students.Any(s => s.ParentContactNumber == model.MobileNumber);
+                if (!hasStudent)
+                {
+                    return BadRequest(new { Status = "Error", Message = "No student found registered with this mobile number. Registration not allowed." });
+                }
+            }
+
+            bool isActive = false;
+            if (model.UserType == "Parent")
+            {
+                isActive = true; // Auto-activate parents who have a matching student
+            }
+
             ApplicationUser user = new()
             {
                 Email = email,
@@ -58,7 +73,7 @@ namespace SchoolERP.Api.Controllers
                 LastName = model.LastName,
                 UserType = model.UserType,
                 PhoneNumber = model.MobileNumber,
-                IsActive = !(model.UserType == "Teacher" || model.UserType == "Operator" || model.UserType == "Principal")
+                IsActive = isActive
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
