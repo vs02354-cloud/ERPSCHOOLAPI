@@ -123,6 +123,26 @@ namespace SchoolERP.Api.Controllers
             return NoContent();
         }
 
+        [HttpPost("IssueAdmitCards")]
+        [Authorize(Roles = "Admin,Super Admin,School Admin,Principal,Teacher")]
+        public async Task<IActionResult> IssueAdmitCards([FromBody] List<int> studentIds)
+        {
+            if (studentIds == null || !studentIds.Any())
+                return BadRequest("No student IDs provided.");
+
+            var studentsToUpdate = await _context.Students
+                .Where(s => studentIds.Contains(s.Id))
+                .ToListAsync();
+
+            foreach (var student in studentsToUpdate)
+            {
+                student.IsAdmitCardIssued = true;
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = $"{studentsToUpdate.Count} admit cards issued successfully." });
+        }
+
         private bool StudentExists(int id)
         {
             return _context.Students.Any(e => e.Id == id);

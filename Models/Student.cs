@@ -50,5 +50,8 @@ namespace SchoolERP.Api.Models
         // Referral
         public int? ReferredByEmployeeId { get; set; }
         public Employee? ReferredByEmployee { get; set; }
+
+        // Admit Card
+        public bool IsAdmitCardIssued { get; set; } = false;
     }
 }
